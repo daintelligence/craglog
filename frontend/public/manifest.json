@@ -1,0 +1,16 @@
+{
+  "name": "CragLog",
+  "short_name": "CragLog",
+  "description": "Your rock climbing logbook",
+  "start_url": "/log",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#856440",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/api/icon/192", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/api/icon/512", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "categories": ["sports", "lifestyle"],
+  "lang": "en-GB"
+}

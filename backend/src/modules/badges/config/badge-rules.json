@@ -1,0 +1,327 @@
+[
+  {
+    "id": "first_outdoor_climb",
+    "name": "First Step",
+    "description": "Completed your first outdoor climb",
+    "tier": "bronze",
+    "icon": "mountain",
+    "category": "milestone",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "total_ascents", "operator": "gte", "value": 1 }
+      ]
+    }
+  },
+  {
+    "id": "ten_climbs",
+    "name": "Getting Going",
+    "description": "Logged 10 climbs",
+    "tier": "bronze",
+    "icon": "list",
+    "category": "milestone",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "total_ascents", "operator": "gte", "value": 10 }
+      ]
+    }
+  },
+  {
+    "id": "fifty_climbs",
+    "name": "Regular Climber",
+    "description": "Logged 50 climbs",
+    "tier": "silver",
+    "icon": "list",
+    "category": "milestone",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "total_ascents", "operator": "gte", "value": 50 }
+      ]
+    }
+  },
+  {
+    "id": "hundred_climbs",
+    "name": "Century Club",
+    "description": "Logged 100 climbs",
+    "tier": "gold",
+    "icon": "trophy",
+    "category": "milestone",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "total_ascents", "operator": "gte", "value": 100 }
+      ]
+    }
+  },
+  {
+    "id": "first_trad_lead",
+    "name": "Trad Warrior",
+    "description": "Led your first trad route",
+    "tier": "silver",
+    "icon": "gear",
+    "category": "style",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "ascents_by_climbing_type", "climbingType": "trad", "operator": "gte", "value": 1 }
+      ]
+    }
+  },
+  {
+    "id": "trad_ten",
+    "name": "Gear Head",
+    "description": "Led 10 trad routes",
+    "tier": "silver",
+    "icon": "gear",
+    "category": "style",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "ascents_by_climbing_type", "climbingType": "trad", "operator": "gte", "value": 10 }
+      ]
+    }
+  },
+  {
+    "id": "trad_fifty",
+    "name": "Trad Master",
+    "description": "Led 50 trad routes",
+    "tier": "gold",
+    "icon": "gear",
+    "category": "style",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "ascents_by_climbing_type", "climbingType": "trad", "operator": "gte", "value": 50 }
+      ]
+    }
+  },
+  {
+    "id": "first_sport_lead",
+    "name": "Bolt Clipper",
+    "description": "Led your first sport route",
+    "tier": "bronze",
+    "icon": "bolt",
+    "category": "style",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "ascents_by_climbing_type", "climbingType": "sport", "operator": "gte", "value": 1 }
+      ]
+    }
+  },
+  {
+    "id": "first_onsight",
+    "name": "Natural",
+    "description": "Onsighted your first route",
+    "tier": "bronze",
+    "icon": "eye",
+    "category": "style",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "ascents_by_type", "ascentType": "onsight", "operator": "gte", "value": 1 }
+      ]
+    }
+  },
+  {
+    "id": "onsight_ten",
+    "name": "Onsight Artist",
+    "description": "Onsighted 10 routes",
+    "tier": "silver",
+    "icon": "eye",
+    "category": "style",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "ascents_by_type", "ascentType": "onsight", "operator": "gte", "value": 10 }
+      ]
+    }
+  },
+  {
+    "id": "five_crags",
+    "name": "Explorer",
+    "description": "Climbed at 5 different crags",
+    "tier": "bronze",
+    "icon": "map",
+    "category": "exploration",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "unique_crags", "operator": "gte", "value": 5 }
+      ]
+    }
+  },
+  {
+    "id": "twenty_crags",
+    "name": "Crag Bagger",
+    "description": "Climbed at 20 different crags",
+    "tier": "gold",
+    "icon": "map",
+    "category": "exploration",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "unique_crags", "operator": "gte", "value": 20 }
+      ]
+    }
+  },
+  {
+    "id": "first_e1",
+    "name": "E1 Achieved",
+    "description": "Climbed your first E1 or harder",
+    "tier": "silver",
+    "icon": "star",
+    "category": "grade",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        {
+          "type": "grade_milestone",
+          "gradeSystem": "uk_trad",
+          "minDifficulty": 12,
+          "operator": "gte",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "first_e2",
+    "name": "E2 Achieved",
+    "description": "Climbed your first E2 or harder",
+    "tier": "silver",
+    "icon": "star",
+    "category": "grade",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        {
+          "type": "grade_milestone",
+          "gradeSystem": "uk_trad",
+          "minDifficulty": 14,
+          "operator": "gte",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "first_e3",
+    "name": "E3 Achieved",
+    "description": "Climbed your first E3 or harder",
+    "tier": "gold",
+    "icon": "star",
+    "category": "grade",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        {
+          "type": "grade_milestone",
+          "gradeSystem": "uk_trad",
+          "minDifficulty": 16,
+          "operator": "gte",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "first_6a",
+    "name": "6a Achieved",
+    "description": "Redpointed your first 6a sport route",
+    "tier": "bronze",
+    "icon": "star",
+    "category": "grade",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        {
+          "type": "grade_milestone",
+          "gradeSystem": "french",
+          "minDifficulty": 10,
+          "operator": "gte",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "first_7a",
+    "name": "7a Achieved",
+    "description": "Redpointed your first 7a sport route",
+    "tier": "gold",
+    "icon": "flame",
+    "category": "grade",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        {
+          "type": "grade_milestone",
+          "gradeSystem": "french",
+          "minDifficulty": 16,
+          "operator": "gte",
+          "value": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "first_multipitch",
+    "name": "On Top of the World",
+    "description": "Completed your first multi-pitch route",
+    "tier": "gold",
+    "icon": "layers",
+    "category": "milestone",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "multipitch_ascents", "operator": "gte", "value": 1 }
+      ]
+    }
+  },
+  {
+    "id": "sport_and_trad",
+    "name": "All-Rounder",
+    "description": "Have led both sport and trad routes",
+    "tier": "silver",
+    "icon": "shuffle",
+    "category": "style",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "ascents_by_climbing_type", "climbingType": "trad", "operator": "gte", "value": 1 },
+        { "type": "ascents_by_climbing_type", "climbingType": "sport", "operator": "gte", "value": 1 }
+      ]
+    }
+  },
+  {
+    "id": "onsight_streak_5",
+    "name": "Clean Sweep",
+    "description": "Onsighted 5 routes in a single day",
+    "tier": "gold",
+    "icon": "zap",
+    "category": "performance",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "onsight_streak_day", "operator": "gte", "value": 5 }
+      ]
+    }
+  },
+  {
+    "id": "stanage_complete",
+    "name": "Stanage Regular",
+    "description": "Logged climbs on 3+ different visits to Stanage Edge",
+    "tier": "silver",
+    "icon": "map-pin",
+    "category": "crag",
+    "rules": {
+      "operator": "AND",
+      "conditions": [
+        { "type": "crag_visits", "cragName": "Stanage Edge", "operator": "gte", "value": 3 }
+      ]
+    }
+  }
+]

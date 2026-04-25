@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --rock-bg: #faf9f7;
+    --nav-height: 64px;
+    --tab-height: 64px;
+    --header-height: 52px;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-stone-50 text-stone-900 antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  .dark body {
+    @apply bg-stone-950 text-stone-50;
+  }
+
+  /* Minimum touch targets */
+  button, [role="button"], a {
+    @apply cursor-pointer;
+    min-height: 44px;
+  }
+}
+
+@layer components {
+  /* ── Buttons ──────────────────────────────────────────────────────────── */
+  .btn-primary {
+    @apply bg-rock-600 hover:bg-rock-700 active:bg-rock-800 text-white font-semibold
+           px-5 py-3 rounded-2xl transition-all duration-150 flex items-center justify-center
+           gap-2 shadow-sm active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .dark .btn-primary {
+    @apply bg-rock-500 hover:bg-rock-400;
+  }
+
+  .btn-secondary {
+    @apply bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-stone-800 font-semibold
+           px-5 py-3 rounded-2xl transition-all duration-150 flex items-center justify-center
+           gap-2 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .dark .btn-secondary {
+    @apply bg-stone-800 hover:bg-stone-700 text-stone-100;
+  }
+
+  .btn-ghost {
+    @apply hover:bg-stone-100 text-stone-600 font-medium px-4 py-2.5 rounded-xl
+           transition-all duration-150 flex items-center gap-2 active:scale-[0.97];
+  }
+  .dark .btn-ghost {
+    @apply hover:bg-stone-800 text-stone-400;
+  }
+
+  .btn-danger {
+    @apply bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 font-semibold
+           px-4 py-2.5 rounded-xl transition-all duration-150 flex items-center gap-2 active:scale-[0.97];
+  }
+
+  /* ── Inputs ───────────────────────────────────────────────────────────── */
+  .input {
+    @apply w-full bg-white border border-stone-200 rounded-2xl px-4 py-3.5 text-stone-900
+           placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rock-500
+           focus:border-transparent transition-all duration-150;
+  }
+  .dark .input {
+    @apply bg-stone-900 border-stone-700 text-stone-100 placeholder-stone-500;
+  }
+
+  .label {
+    @apply block text-sm font-semibold text-stone-700 mb-1.5;
+  }
+  .dark .label {
+    @apply text-stone-300;
+  }
+
+  /* ── Cards ────────────────────────────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-2xl border border-stone-100 shadow-sm;
+  }
+  .dark .card {
+    @apply bg-stone-900 border-stone-800;
+  }
+
+  .card-hover {
+    @apply card hover:border-rock-300 hover:shadow-md active:scale-[0.99] transition-all cursor-pointer;
+  }
+  .dark .card-hover {
+    @apply hover:border-rock-700;
+  }
+
+  /* ── Grade chips ──────────────────────────────────────────────────────── */
+  .grade-chip {
+    @apply inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold;
+  }
+
+  /* UK Trad grade bands */
+  .grade-green   { @apply bg-emerald-100 text-emerald-800; }
+  .grade-lime    { @apply bg-lime-100 text-lime-800; }
+  .grade-amber   { @apply bg-amber-100 text-amber-800; }
+  .grade-orange  { @apply bg-orange-100 text-orange-800; }
+  .grade-red     { @apply bg-red-100 text-red-700; }
+  .grade-crimson { @apply bg-red-200 text-red-900; }
+  .grade-purple  { @apply bg-purple-100 text-purple-900; }
+  .grade-black   { @apply bg-stone-800 text-white; }
+  .grade-default { @apply bg-rock-100 text-rock-700; }
+
+  /* Dark variants */
+  .dark .grade-green   { @apply bg-emerald-900/50 text-emerald-300; }
+  .dark .grade-lime    { @apply bg-lime-900/50 text-lime-300; }
+  .dark .grade-amber   { @apply bg-amber-900/50 text-amber-300; }
+  .dark .grade-orange  { @apply bg-orange-900/50 text-orange-300; }
+  .dark .grade-red     { @apply bg-red-900/50 text-red-300; }
+  .dark .grade-crimson { @apply bg-red-950 text-red-200; }
+  .dark .grade-purple  { @apply bg-purple-950 text-purple-300; }
+  .dark .grade-black   { @apply bg-stone-700 text-stone-100; }
+  .dark .grade-default { @apply bg-rock-900/50 text-rock-300; }
+
+  /* ── Badges ───────────────────────────────────────────────────────────── */
+  .badge-bronze   { @apply bg-gradient-to-br from-amber-600 to-yellow-700; }
+  .badge-silver   { @apply bg-gradient-to-br from-slate-400 to-slate-500; }
+  .badge-gold     { @apply bg-gradient-to-br from-yellow-400 to-amber-500; }
+  .badge-platinum { @apply bg-gradient-to-br from-cyan-300 to-teal-400; }
+
+  /* ── Skeleton loader ──────────────────────────────────────────────────── */
+  .skeleton {
+    @apply rounded-xl bg-stone-200;
+    background: linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%);
+    background-size: 400px 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+  .dark .skeleton {
+    background: linear-gradient(90deg, #292524 25%, #1c1917 50%, #292524 75%);
+    background-size: 400px 100%;
+  }
+
+  /* ── Quick log tap targets ────────────────────────────────────────────── */
+  .quick-tap {
+    @apply flex-1 py-4 rounded-2xl font-semibold text-sm transition-all duration-100
+           active:scale-95 select-none;
+  }
+
+  /* ── Dividers ─────────────────────────────────────────────────────────── */
+  .divider {
+    @apply border-t border-stone-100;
+  }
+  .dark .divider {
+    @apply border-stone-800;
+  }
+
+  /* ── Ascent type colour pills ─────────────────────────────────────────── */
+  .ascent-onsight  { @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300; }
+  .ascent-flash    { @apply bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300; }
+  .ascent-redpoint { @apply bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300; }
+  .ascent-pinkpoint{ @apply bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300; }
+  .ascent-repeat   { @apply bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-300; }
+  .ascent-dog      { @apply bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400; }
+  .ascent-second   { @apply bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300; }
+  .ascent-solo     { @apply bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300; }
+  .ascent-abseil   { @apply bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300; }
+
+  /* ── Hero gradient (dashboard) ────────────────────────────────────────── */
+  .hero-gradient {
+    background: linear-gradient(135deg, #57402d 0%, #856440 50%, #9b7e5a 100%);
+  }
+
+  /* ── Rock type colour accents ─────────────────────────────────────────── */
+  .rock-gritstone  { @apply bg-amber-50 border-amber-200; }
+  .rock-limestone  { @apply bg-slate-50 border-slate-200; }
+  .rock-granite    { @apply bg-stone-50 border-stone-300; }
+  .rock-sandstone  { @apply bg-orange-50 border-orange-200; }
+  .rock-basalt     { @apply bg-stone-100 border-stone-400; }
+  .rock-quartzite  { @apply bg-cyan-50 border-cyan-200; }
+  .rock-other      { @apply bg-rock-50 border-rock-200; }
+
+  /* ── Heatmap cell ─────────────────────────────────────────────────────── */
+  .heat-0 { @apply bg-stone-100; }
+  .heat-1 { @apply bg-emerald-200; }
+  .heat-2 { @apply bg-emerald-400; }
+  .heat-3 { @apply bg-emerald-600; }
+  .heat-4 { @apply bg-emerald-800; }
+
+  .dark .heat-0 { @apply bg-stone-800; }
+  .dark .heat-1 { @apply bg-emerald-900; }
+  .dark .heat-2 { @apply bg-emerald-700; }
+  .dark .heat-3 { @apply bg-emerald-500; }
+  .dark .heat-4 { @apply bg-emerald-300; }
+}
+
+/* Leaflet */
+.leaflet-container {
+  @apply rounded-2xl;
+  z-index: 0 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  @apply rounded-xl shadow-lg;
+  font-family: inherit !important;
+}

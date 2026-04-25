@@ -1,0 +1,24 @@
+{
+  "format": "dlog",
+  "version": "1.0",
+  "description": "DLOG compatible climbing log export",
+  "fields": [
+    { "target": "Date",        "source": "date",                              "required": true },
+    { "target": "Crag",        "source": "crag.name",                         "required": true },
+    { "target": "Buttress",    "source": "route.buttress.name",               "required": false },
+    { "target": "Route",       "source": "route.name",                        "required": true },
+    { "target": "Grade",       "source": "route.grade",                       "required": true },
+    { "target": "GradeSystem", "source": "route.gradeSystem",                 "required": false },
+    { "target": "Style",       "source": "route.climbingType",                "required": true },
+    { "target": "Ascent",      "source": "ascentType",                        "required": true },
+    { "target": "Partner",     "source": "partner",                           "required": false },
+    { "target": "Stars",       "source": "starRating",                        "required": false },
+    { "target": "Notes",       "source": "notes",                             "required": false },
+    { "target": "Attempts",    "source": "attempts",                          "required": false },
+    { "target": "Region",      "source": "crag.region.name",                  "required": false }
+  ],
+  "validation": {
+    "requiredFields": ["Date", "Crag", "Route", "Grade", "Style", "Ascent"],
+    "dateFormat": "YYYY-MM-DD"
+  }
+}
