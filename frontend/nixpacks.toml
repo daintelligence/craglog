@@ -5,6 +5,7 @@ nixPkgs = ["nodejs_20"]
 cmds = ["npm ci"]
 
 [phases.build]
+cacheDirectories = [".next/cache"]
 cmds = [
   "npm run build",
   "cp -r .next/static .next/standalone/.next/static",
