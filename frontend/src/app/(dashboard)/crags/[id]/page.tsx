@@ -132,7 +132,7 @@ function RouteRow({ route, cragId }: { route: Route; cragId: string }) {
   const removeMut = useMutation({
     mutationFn: () => {
       const p = projects?.find((p: any) => p.routeId === route.id);
-      return p ? projectsApi.remove(p.id) : Promise.resolve();
+      return p ? projectsApi.remove(p.id) : Promise.resolve() as any;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
   });

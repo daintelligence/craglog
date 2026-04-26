@@ -119,7 +119,7 @@ export default function RouteDetailPage() {
               </p>
             )}
           </div>
-          <GradeChip grade={route.grade} gradeSystem={route.gradeSystem} size="lg" />
+          <GradeChip grade={route.grade} gradeSystem={route.gradeSystem} size="md" />
         </div>
 
         {/* meta row */}

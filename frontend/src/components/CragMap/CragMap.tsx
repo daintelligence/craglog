@@ -177,6 +177,7 @@ export default function CragMap({
 
     const init = async () => {
       const L = (await import('leaflet')).default;
+      // @ts-ignore — no type declarations for CSS module
       await import('leaflet/dist/leaflet.css');
 
       delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -202,7 +203,7 @@ export default function CragMap({
         zoomControl: true,
         attributionControl: true,
         tap: false,
-      });
+      } as any);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',

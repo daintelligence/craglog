@@ -461,7 +461,7 @@ export default function LogbookPage() {
       ) : (
         <div className="space-y-1">
           {grouped.map(([date, dayAscents]) => {
-            const crags = [...new Set(dayAscents.map((a: any) => a.crag?.name).filter(Boolean))] as string[];
+            const crags = Array.from(new Set(dayAscents.map((a: any) => a.crag?.name).filter(Boolean))) as string[];
             return (
               <div key={date}>
                 <DayHeader date={date} count={dayAscents.length} crags={crags} />
