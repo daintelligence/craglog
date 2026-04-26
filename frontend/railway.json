@@ -4,7 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "node .next/standalone/server.js",
     "healthcheckPath": "/",
     "healthcheckTimeout": 60,
     "restartPolicyType": "ON_FAILURE",
