@@ -88,7 +88,7 @@ export class Route {
   @JoinColumn({ name: 'buttress_id' })
   buttress: Buttress;
 
-  @Column()
+  @Column({ name: 'buttress_id' })
   buttressId: string;
 
   @CreateDateColumn()

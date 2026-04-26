@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { BadgesService } from './badges.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -23,5 +23,11 @@ export class BadgesController {
   @ApiOperation({ summary: 'Get badges earned by current user' })
   getUserBadges(@CurrentUser('id') userId: string) {
     return this.badgesService.getUserBadges(userId);
+  }
+
+  @Post('evaluate')
+  @ApiOperation({ summary: 'Evaluate and award any newly earned badges' })
+  evaluate(@CurrentUser('id') userId: string) {
+    return this.badgesService.evaluateForUser(userId);
   }
 }

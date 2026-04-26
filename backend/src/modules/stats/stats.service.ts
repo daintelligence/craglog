@@ -35,7 +35,7 @@ export class StatsService {
         COUNT(DISTINCT a.crag_id) as unique_crags,
         COUNT(DISTINCT a.route_id) as unique_routes,
         COUNT(DISTINCT a.date) as total_days,
-        MAX(r.grade_difficulty) as max_difficulty
+        MAX(r."gradeDifficulty") as max_difficulty
        FROM ascents a
        LEFT JOIN routes r ON r.id = a.route_id
        WHERE a.user_id = $1`,
@@ -52,28 +52,28 @@ export class StatsService {
 
   private async getByClimbingType(userId: string) {
     const rows = await this.dataSource.query(
-      `SELECT r.climbing_type, COUNT(*) as cnt
+      `SELECT r."climbingType", COUNT(*) as cnt
        FROM ascents a JOIN routes r ON r.id = a.route_id
        WHERE a.user_id = $1
-       GROUP BY r.climbing_type ORDER BY cnt DESC`,
+       GROUP BY r."climbingType" ORDER BY cnt DESC`,
       [userId],
     );
-    return rows.map((r: any) => ({ type: r.climbing_type, count: parseInt(r.cnt, 10) }));
+    return rows.map((r: any) => ({ type: r.climbingType, count: parseInt(r.cnt, 10) }));
   }
 
   private async getGradeDistribution(userId: string) {
     const rows = await this.dataSource.query(
-      `SELECT r.grade, r.grade_system, r.grade_difficulty, COUNT(*) as cnt
+      `SELECT r.grade, r."gradeSystem", r."gradeDifficulty", COUNT(*) as cnt
        FROM ascents a JOIN routes r ON r.id = a.route_id
        WHERE a.user_id = $1
-       GROUP BY r.grade, r.grade_system, r.grade_difficulty
-       ORDER BY r.grade_difficulty ASC`,
+       GROUP BY r.grade, r."gradeSystem", r."gradeDifficulty"
+       ORDER BY r."gradeDifficulty" ASC`,
       [userId],
     );
     return rows.map((r: any) => ({
       grade: r.grade,
-      gradeSystem: r.grade_system,
-      difficulty: parseInt(r.grade_difficulty, 10),
+      gradeSystem: r.gradeSystem,
+      difficulty: parseInt(r.gradeDifficulty, 10),
       count: parseInt(r.cnt, 10),
     }));
   }
@@ -101,8 +101,8 @@ export class StatsService {
       `SELECT
         TO_CHAR(a.date::date, 'YYYY-MM') as month,
         COUNT(*) as total,
-        MAX(r.grade_difficulty) as max_difficulty,
-        COUNT(CASE WHEN a.ascent_type = 'onsight' THEN 1 END) as onsights
+        MAX(r."gradeDifficulty") as max_difficulty,
+        COUNT(CASE WHEN a."ascentType" = 'onsight' THEN 1 END) as onsights
        FROM ascents a JOIN routes r ON r.id = a.route_id
        WHERE a.user_id = $1
          AND a.date >= NOW() - INTERVAL '12 months'
@@ -120,8 +120,8 @@ export class StatsService {
 
   private async getRecentAscents(userId: string) {
     return this.dataSource.query(
-      `SELECT a.id, a.date, a.ascent_type, a.notes,
-              r.name as route_name, r.grade, r.grade_system, r.climbing_type,
+      `SELECT a.id, a.date, a."ascentType", a.notes,
+              r.name as route_name, r.grade, r."gradeSystem", r."climbingType",
               c.name as crag_name
        FROM ascents a
        JOIN routes r ON r.id = a.route_id
@@ -137,9 +137,9 @@ export class StatsService {
     const [row] = await this.dataSource.query(
       `SELECT
         COUNT(*) as total,
-        COUNT(CASE WHEN ascent_type = 'onsight' THEN 1 END) as onsights,
-        COUNT(CASE WHEN ascent_type = 'flash' THEN 1 END) as flashes,
-        COUNT(CASE WHEN ascent_type = 'redpoint' THEN 1 END) as redpoints
+        COUNT(CASE WHEN "ascentType" = 'onsight' THEN 1 END) as onsights,
+        COUNT(CASE WHEN "ascentType" = 'flash' THEN 1 END) as flashes,
+        COUNT(CASE WHEN "ascentType" = 'redpoint' THEN 1 END) as redpoints
        FROM ascents WHERE user_id = $1`,
       [userId],
     );
@@ -198,8 +198,8 @@ export class StatsService {
         this.dataSource.query(
           `SELECT r.name as route_name, r.height, c.name as crag_name
            FROM ascents a JOIN routes r ON r.id = a.route_id LEFT JOIN crags c ON c.id = a.crag_id
-           WHERE a.user_id = $1 AND r.height IS NOT NULL
-           ORDER BY r.height DESC LIMIT 1`,
+           WHERE a.user_id = $1 AND r."heightMetres" IS NOT NULL
+           ORDER BY r."heightMetres" DESC LIMIT 1`,
           [userId],
         ),
         this.dataSource.query(
@@ -228,7 +228,7 @@ export class StatsService {
         EXTRACT(YEAR FROM date::date) as year,
         COUNT(*) as total,
         COUNT(DISTINCT crag_id) as crags,
-        COUNT(CASE WHEN ascent_type = 'onsight' THEN 1 END) as onsights
+        COUNT(CASE WHEN "ascentType" = 'onsight' THEN 1 END) as onsights
        FROM ascents
        WHERE user_id = $1 AND EXTRACT(YEAR FROM date::date) >= EXTRACT(YEAR FROM NOW()) - 2
        GROUP BY year ORDER BY year DESC`,

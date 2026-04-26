@@ -5,7 +5,7 @@ import { UserBadge } from './entities/user-badge.entity';
 import * as path from 'path';
 import * as fs from 'fs';
 
-interface BadgeRule {
+export interface BadgeRule {
   id: string;
   name: string;
   description: string;
@@ -147,13 +147,13 @@ export class BadgeEngineService {
           [userId],
         ),
         this.dataSource.query(
-          `SELECT ascent_type, COUNT(*) as cnt FROM ascents WHERE user_id = $1 GROUP BY ascent_type`,
+          `SELECT "ascentType", COUNT(*) as cnt FROM ascents WHERE user_id = $1 GROUP BY "ascentType"`,
           [userId],
         ),
         this.dataSource.query(
-          `SELECT r.climbing_type, COUNT(*) as cnt
+          `SELECT r."climbingType", COUNT(*) as cnt
            FROM ascents a JOIN routes r ON r.id = a.route_id
-           WHERE a.user_id = $1 GROUP BY r.climbing_type`,
+           WHERE a.user_id = $1 GROUP BY r."climbingType"`,
           [userId],
         ),
         this.dataSource.query(
@@ -161,10 +161,10 @@ export class BadgeEngineService {
           [userId],
         ),
         this.dataSource.query(
-          `SELECT r.grade_system, r.grade_difficulty, COUNT(*) as cnt
+          `SELECT r."gradeSystem", r."gradeDifficulty", COUNT(*) as cnt
            FROM ascents a JOIN routes r ON r.id = a.route_id
            WHERE a.user_id = $1
-           GROUP BY r.grade_system, r.grade_difficulty`,
+           GROUP BY r."gradeSystem", r."gradeDifficulty"`,
           [userId],
         ),
         this.dataSource.query(
@@ -175,7 +175,7 @@ export class BadgeEngineService {
         ),
         this.dataSource.query(
           `SELECT date, COUNT(*) as cnt FROM ascents
-           WHERE user_id = $1 AND ascent_type = 'onsight'
+           WHERE user_id = $1 AND "ascentType" = 'onsight'
            GROUP BY date ORDER BY cnt DESC LIMIT 1`,
           [userId],
         ),
@@ -188,17 +188,17 @@ export class BadgeEngineService {
       ]);
 
     const byAscentType: Record<string, number> = {};
-    byType.forEach((r: any) => { byAscentType[r.ascent_type] = parseInt(r.cnt, 10); });
+    byType.forEach((r: any) => { byAscentType[r.ascentType] = parseInt(r.cnt, 10); });
 
     const byClimbingType: Record<string, number> = {};
-    byCT.forEach((r: any) => { byClimbingType[r.climbing_type] = parseInt(r.cnt, 10); });
+    byCT.forEach((r: any) => { byClimbingType[r.climbingType] = parseInt(r.cnt, 10); });
 
     const gradeAchievements: Record<string, number> = {};
     gradeMilestones.forEach((r: any) => {
-      const key = `${r.grade_system}_${r.grade_difficulty}`;
+      const key = `${r.gradeSystem}_${r.gradeDifficulty}`;
       gradeAchievements[key] = (gradeAchievements[key] || 0) + parseInt(r.cnt, 10);
-      for (let d = 1; d < parseInt(r.grade_difficulty, 10); d++) {
-        const lowerKey = `${r.grade_system}_${d}`;
+      for (let d = 1; d < parseInt(r.gradeDifficulty, 10); d++) {
+        const lowerKey = `${r.gradeSystem}_${d}`;
         gradeAchievements[lowerKey] = (gradeAchievements[lowerKey] || 0) + parseInt(r.cnt, 10);
       }
     });

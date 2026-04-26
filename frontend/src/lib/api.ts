@@ -43,7 +43,7 @@ export const authApi = {
 
 // ─── Crags ────────────────────────────────────────────────────────────────────
 export const cragsApi = {
-  search: (params: { q?: string; lat?: number; lng?: number; radiusKm?: number; limit?: number }) =>
+  search: (params: { q?: string; lat?: number; lng?: number; radiusKm?: number; limit?: number; climbingType?: string; country?: string; regionId?: string }) =>
     api.get('/crags', { params }).then((r) => r.data),
   getById: (id: string) => api.get(`/crags/${id}`).then((r) => r.data),
   getButtresses: (id: string) => api.get(`/crags/${id}/buttresses`).then((r) => r.data),
@@ -109,6 +109,12 @@ export const geoApi = {
   nearby: (lat: number, lng: number, radiusKm = 25, limit = 5) =>
     api.get('/geo/nearby', { params: { lat, lng, radiusKm, limit } }).then((r) => r.data),
   bounds: () => api.get('/geo/bounds').then((r) => r.data),
+};
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+export const feedbackApi = {
+  submit: (data: { category: string; message: string; rating?: number; context?: string }) =>
+    api.post('/feedback', data).then((r) => r.data),
 };
 
 // ─── Export ───────────────────────────────────────────────────────────────────

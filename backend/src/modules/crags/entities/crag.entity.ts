@@ -41,10 +41,10 @@ export class Crag {
   @Index()
   longitude: number;
 
-  @Column({ nullable: true, length: 200 })
+  @Column({ nullable: true, length: 1000 })
   approach: string;
 
-  @Column({ nullable: true, length: 100 })
+  @Column({ nullable: true, length: 500 })
   parkingInfo: string;
 
   @Column({ type: 'enum', enum: RockType, default: RockType.OTHER })
@@ -63,7 +63,7 @@ export class Crag {
   @JoinColumn({ name: 'region_id' })
   region: Region;
 
-  @Column({ nullable: true })
+  @Column({ name: 'region_id', nullable: true })
   regionId: string;
 
   @OneToMany(() => Buttress, (buttress) => buttress.crag, { cascade: true })

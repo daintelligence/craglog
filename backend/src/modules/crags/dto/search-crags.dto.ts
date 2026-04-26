@@ -33,6 +33,16 @@ export class SearchCragsDto {
   @IsString()
   regionId?: string;
 
+  @ApiProperty({ required: false, enum: ['England', 'Wales', 'Scotland'] })
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @ApiProperty({ required: false, enum: ['trad', 'sport', 'boulder', 'mixed', 'alpine', 'dws'] })
+  @IsOptional()
+  @IsString()
+  climbingType?: string;
+
   @ApiProperty({ required: false, default: 20 })
   @IsOptional()
   @Type(() => Number)

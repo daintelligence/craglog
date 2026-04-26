@@ -14,6 +14,7 @@ import { getTheme, isOnboarded } from '@/lib/sessionStore';
 import { cn } from '@/lib/utils';
 import { Onboarding } from '@/components/Onboarding';
 import { PageTransition } from '@/components/PageTransition';
+import { FeedbackWidget } from '@/components/FeedbackWidget/FeedbackWidget';
 
 const NAV = [
   { href: '/dashboard', label: 'Home',    icon: LayoutDashboard },
@@ -108,6 +109,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}>
         <PageTransition>{children}</PageTransition>
       </main>
+
+      <FeedbackWidget />
 
       {/* ── Bottom tab bar ─────────────────────────────────────────────── */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-stone-900/95 backdrop-blur-sm border-t border-stone-100 dark:border-stone-800 safe-area-pb">

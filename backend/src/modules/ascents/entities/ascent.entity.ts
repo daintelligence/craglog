@@ -33,7 +33,7 @@ export class Ascent {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column()
+  @Column({ name: 'user_id' })
   @Index()
   userId: string;
 
@@ -41,14 +41,14 @@ export class Ascent {
   @JoinColumn({ name: 'route_id' })
   route: Route;
 
-  @Column()
+  @Column({ name: 'route_id' })
   routeId: string;
 
   @ManyToOne(() => Crag, { onDelete: 'SET NULL', nullable: true, eager: false })
   @JoinColumn({ name: 'crag_id' })
   crag: Crag;
 
-  @Column({ nullable: true })
+  @Column({ name: 'crag_id', nullable: true })
   @Index()
   cragId: string;
 
@@ -65,7 +65,7 @@ export class Ascent {
   @Column({ nullable: true, length: 200 })
   partner: string;
 
-  @Column({ type: 'int', nullable: true, min: 1, max: 5 })
+  @Column({ type: 'int', nullable: true })
   starRating: number;
 
   @Column({ default: false })

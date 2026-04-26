@@ -9,6 +9,10 @@ export class BadgesService {
     return this.engine.getUserBadges(userId);
   }
 
+  evaluateForUser(userId: string) {
+    return this.engine.evaluateForUser(userId);
+  }
+
   getAllBadges() {
     return this.engine.getAllBadges();
   }

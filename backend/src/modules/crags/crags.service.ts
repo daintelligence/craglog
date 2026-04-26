@@ -31,6 +31,15 @@ export class CragsService {
     if (dto.regionId) {
       qb.andWhere('c.regionId = :regionId', { regionId: dto.regionId });
     }
+    if (dto.country) {
+      qb.andWhere('r.country = :country', { country: dto.country });
+    }
+    if (dto.climbingType) {
+      qb.andWhere(
+        `EXISTS (SELECT 1 FROM buttresses b JOIN routes r ON r.buttress_id = b.id WHERE b.crag_id = c.id AND r."climbingType" = :ct)`,
+        { ct: dto.climbingType },
+      );
+    }
 
     qb.orderBy('c.name', 'ASC').limit(dto.limit || 20);
 
@@ -54,18 +63,20 @@ export class CragsService {
 
     const raw = await this.dataSource.query(
       `SELECT c.*, r.name as region_name,
-        ST_Distance(
-          ST_SetSRID(ST_MakePoint(c.longitude::float, c.latitude::float), 4326)::geography,
-          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
-        ) as distance_metres
+        6371000 * 2 * ASIN(SQRT(
+          POWER(SIN(RADIANS((c.latitude::float - $2) / 2)), 2) +
+          COS(RADIANS($2)) * COS(RADIANS(c.latitude::float)) *
+          POWER(SIN(RADIANS((c.longitude::float - $1) / 2)), 2)
+        )) AS distance_metres
        FROM crags c
        LEFT JOIN regions r ON r.id = c.region_id
        WHERE c.is_active = true
          AND c.latitude IS NOT NULL
-         AND ST_Distance(
-           ST_SetSRID(ST_MakePoint(c.longitude::float, c.latitude::float), 4326)::geography,
-           ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
-         ) <= $3
+         AND 6371000 * 2 * ASIN(SQRT(
+           POWER(SIN(RADIANS((c.latitude::float - $2) / 2)), 2) +
+           COS(RADIANS($2)) * COS(RADIANS(c.latitude::float)) *
+           POWER(SIN(RADIANS((c.longitude::float - $1) / 2)), 2)
+         )) <= $3
          ${nameFilter}
        ORDER BY distance_metres ASC
        LIMIT ${limitParam}`,
@@ -173,18 +184,20 @@ export class CragsService {
     const raw = await this.dataSource.query(
       `SELECT c.id, c.name, c.latitude, c.longitude, c.rock_type,
         r.name as region_name,
-        ST_Distance(
-          ST_SetSRID(ST_MakePoint(c.longitude::float, c.latitude::float), 4326)::geography,
-          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
-        ) as distance_metres
+        6371000 * 2 * ASIN(SQRT(
+          POWER(SIN(RADIANS((c.latitude::float - $2) / 2)), 2) +
+          COS(RADIANS($2)) * COS(RADIANS(c.latitude::float)) *
+          POWER(SIN(RADIANS((c.longitude::float - $1) / 2)), 2)
+        )) AS distance_metres
        FROM crags c
        LEFT JOIN regions r ON r.id = c.region_id
        WHERE c.is_active = true
          AND c.latitude IS NOT NULL
-         AND ST_Distance(
-           ST_SetSRID(ST_MakePoint(c.longitude::float, c.latitude::float), 4326)::geography,
-           ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
-         ) <= $3
+         AND 6371000 * 2 * ASIN(SQRT(
+           POWER(SIN(RADIANS((c.latitude::float - $2) / 2)), 2) +
+           COS(RADIANS($2)) * COS(RADIANS(c.latitude::float)) *
+           POWER(SIN(RADIANS((c.longitude::float - $1) / 2)), 2)
+         )) <= $3
        ORDER BY distance_metres ASC
        LIMIT 5`,
       [lng, lat, radiusMetres],

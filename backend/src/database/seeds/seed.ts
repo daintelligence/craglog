@@ -19,6 +19,21 @@ import { seedPembrokeshire } from './pembrokeshire.seed';
 import { seedAvonGorge } from './avon-gorge.seed';
 import { seedPeakDistrictClassic } from './peak-district-classic.seed';
 import { seedMidWales } from './mid-wales.seed';
+import { seedStanageExtended } from './stanage-extended.seed';
+import { seedPeakGritNewCrags } from './peak-gritstone-new-crags.seed';
+import { seedLakeDistrictExtended } from './lake-district-extended.seed';
+import { seedNorthWalesClassics } from './north-wales-classics.seed';
+import { seedScotlandExtended } from './scotland-extended.seed';
+import { seedYorkshireExtended } from './yorkshire-extended.seed';
+import { seedSouthernCragsExtended } from './southern-crags-extended.seed';
+import { seedPeakLimestoneSport } from './peak-limestone-sport.seed';
+import { seedNorthumberlandExtended } from './northumberland-extended.seed';
+import { seedWalesExtra } from './wales-extra.seed';
+import { seedSouthWestExtended } from './south-west-extended.seed';
+import { seedSouthEastSandstone } from './south-east-sandstone.seed';
+import { seedLakeDistrictBorrowdale } from './lake-district-borrowdale.seed';
+import { seedDemoAscents } from './demo-ascents.seed';
+import { patchRegionCountries } from './seed-helpers';
 import * as bcrypt from 'bcryptjs';
 
 const ds = new DataSource({
@@ -32,10 +47,6 @@ const ds = new DataSource({
 async function seed() {
   await ds.initialize();
   console.log('🌱 Starting database seed...');
-
-  // Enable PostGIS
-  await ds.query(`CREATE EXTENSION IF NOT EXISTS postgis`);
-  console.log('  ✓ PostGIS extension enabled');
 
   // Seed crags / routes
   await seedUKCrags(ds);
@@ -74,6 +85,50 @@ async function seed() {
   await seedMidWales(ds);
   console.log('  ✓ Mid-Wales and Wye Valley seeded');
 
+  await seedStanageExtended(ds);
+  console.log('  ✓ Stanage & Peak grit expanded');
+
+  await seedPeakGritNewCrags(ds);
+  console.log('  ✓ New Peak gritstone crags seeded');
+
+  await seedLakeDistrictExtended(ds);
+  console.log('  ✓ Lake District extended (Wildcat, Napes, Pillar, etc.)');
+
+  await seedNorthWalesClassics(ds);
+  console.log('  ✓ North Wales classics seeded');
+
+  await seedScotlandExtended(ds);
+  console.log('  ✓ Scotland extended seeded');
+
+  await seedYorkshireExtended(ds);
+  console.log('  ✓ Yorkshire extended seeded');
+
+  await seedSouthernCragsExtended(ds);
+  console.log('  ✓ Southern crags extended seeded');
+
+  await seedPeakLimestoneSport(ds);
+  console.log('  ✓ Peak limestone sport crags seeded (Cheedale, Water-cum-Jolly, Harpur Hill, Horseshoe Quarry, Ravensdale, Stoney Middleton extended)');
+
+  await seedNorthumberlandExtended(ds);
+  console.log('  ✓ Northumberland extended seeded (Simonside, Bowden Doors, Kyloe, Crag Lough, Sandy Crag, Great Wanney)');
+
+  await seedWalesExtra(ds);
+  console.log('  ✓ Wales extra seeded (Rhoscolyn, Holyhead Mountain, Cwm Silyn, Craig y Forwen, Pen yr Ole Wen, Gogarth South Stack)');
+
+  await seedSouthWestExtended(ds);
+  console.log('  ✓ South West extended seeded (Baggy Point, Lundy Island, Hartland Quay, Dewerstone, Carn Brea, Sennen Cove)');
+
+  await seedSouthEastSandstone(ds);
+  console.log("  ✓ South East Sandstone seeded (Harrison's, High Rocks, Stone Farm, Bowles, Eridge Green, Cheddar Gorge supplementary)");
+
+  await seedLakeDistrictBorrowdale(ds);
+  console.log("  ✓ Lake District Borrowdale seeded (Shepherd's Crag, Castle Rock, Hodge Close, Falcon Crag, Buckstone How)");
+
+  // Patch region countries (UK → England/Wales/Scotland)
+  const regionRepo = ds.getRepository(Region);
+  await patchRegionCountries(regionRepo);
+  console.log('  ✓ Region countries patched');
+
   // Seed demo user
   const userRepo = ds.getRepository(User);
   const existing = await userRepo.findOne({ where: { email: 'demo@craglog.app' } });
@@ -85,34 +140,13 @@ async function seed() {
       password: await bcrypt.hash('demo1234', 12),
     });
     await userRepo.save(user);
-
-    // Seed some sample ascents for the demo user
-    const ascentRepo = ds.getRepository(Ascent);
-    const routeRepo = ds.getRepository(Route);
-    const cragRepo = ds.getRepository(Crag);
-
-    const routes = await routeRepo.find({ relations: ['buttress', 'buttress.crag'] });
-    const stanage = await cragRepo.findOne({ where: { name: 'Stanage Edge' } });
-
-    if (routes.length && stanage) {
-      const sampleAscents = routes.slice(0, 8).map((r, i) => ({
-        userId: user.id,
-        routeId: r.id,
-        cragId: r.buttress?.cragId || stanage.id,
-        ascentType: ['onsight', 'redpoint', 'flash', 'second', 'onsight', 'redpoint', 'onsight', 'redpoint'][i] as any,
-        date: new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-        notes: i === 0 ? 'First visit — absolutely loved it!' : undefined,
-        partner: i % 2 === 0 ? 'Jane Smith' : undefined,
-        starRating: Math.floor(Math.random() * 2) + 4,
-        attempts: Math.ceil(Math.random() * 3),
-      }));
-      await ascentRepo.save(sampleAscents);
-    }
-
     console.log('  ✓ Demo user created: demo@craglog.app / demo1234');
   } else {
     console.log('  ℹ Demo user already exists');
   }
+
+  await seedDemoAscents(ds);
+  console.log('  ✓ Demo ascents seeded');
 
   await ds.destroy();
   console.log('✅ Seed complete!');

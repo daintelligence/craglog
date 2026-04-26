@@ -24,26 +24,27 @@ interface Cluster {
 }
 
 function clusterCrags(crags: Crag[], zoom: number): Cluster[] {
-  // Grid cell size shrinks as zoom increases — at zoom 10+ show individual markers
   const gridSize = zoom >= 10 ? 0 : zoom >= 8 ? 0.5 : zoom >= 6 ? 1.5 : 3;
+
+  // Parse coordinates — TypeORM returns decimal columns as strings
+  const valid = crags
+    .map((c) => ({ ...c, latitude: Number(c.latitude), longitude: Number(c.longitude) }))
+    .filter((c) => isFinite(c.latitude) && isFinite(c.longitude));
+
   if (gridSize === 0) {
-    return crags
-      .filter((c) => c.latitude && c.longitude)
-      .map((c) => ({ lat: c.latitude!, lng: c.longitude!, crags: [c] }));
+    return valid.map((c) => ({ lat: c.latitude, lng: c.longitude, crags: [c] }));
   }
 
   const grid = new Map<string, Cluster>();
-  crags.forEach((c) => {
-    if (!c.latitude || !c.longitude) return;
+  valid.forEach((c) => {
     const key = `${Math.round(c.latitude / gridSize)},${Math.round(c.longitude / gridSize)}`;
     if (!grid.has(key)) {
       grid.set(key, { lat: c.latitude, lng: c.longitude, crags: [] });
     }
     const cluster = grid.get(key)!;
     cluster.crags.push(c);
-    // Keep centroid as average
-    cluster.lat = cluster.crags.reduce((s, x) => s + x.latitude!, 0) / cluster.crags.length;
-    cluster.lng = cluster.crags.reduce((s, x) => s + x.longitude!, 0) / cluster.crags.length;
+    cluster.lat = cluster.crags.reduce((s, x) => s + Number(x.latitude), 0) / cluster.crags.length;
+    cluster.lng = cluster.crags.reduce((s, x) => s + Number(x.longitude), 0) / cluster.crags.length;
   });
   return Array.from(grid.values());
 }
@@ -158,10 +159,12 @@ export default function CragMap({
   onCragClick,
   height = '100%',
 }: Props) {
-  const containerRef  = useRef<HTMLDivElement>(null);
-  const mapRef        = useRef<any>(null);
-  const markersRef    = useRef<any[]>([]);
-  const userMarkerRef = useRef<any>(null);
+  const containerRef     = useRef<HTMLDivElement>(null);
+  const mapRef           = useRef<any>(null);
+  const markersRef       = useRef<any[]>([]);
+  const userMarkerRef    = useRef<any>(null);
+  const cragsRef         = useRef<Crag[]>(crags);
+  const renderMarkersRef = useRef<(() => void) | null>(null);
   const [panel, setPanel] = useState<{ type: 'crag'; crag: Crag } | { type: 'cluster'; cluster: Cluster } | null>(null);
 
   const handleCragClick = useCallback((crag: Crag) => {
@@ -185,10 +188,12 @@ export default function CragMap({
 
       if (mapRef.current) return;
 
+      const firstLat = Number(crags[0]?.latitude);
+      const firstLng = Number(crags[0]?.longitude);
       const centre: [number, number] = userLat && userLng
         ? [userLat, userLng]
-        : crags.length > 0 && crags[0].latitude
-          ? [crags[0].latitude, crags[0].longitude!]
+        : isFinite(firstLat) && isFinite(firstLng)
+          ? [firstLat, firstLng]
           : [54.0, -2.1]; // Centre of England/Wales
 
       const map = L.map(containerRef.current!, {
@@ -212,7 +217,7 @@ export default function CragMap({
         markersRef.current = [];
 
         const zoom = map.getZoom();
-        const clusters = clusterCrags(crags, zoom);
+        const clusters = clusterCrags(cragsRef.current, zoom);
 
         clusters.forEach((cluster) => {
           const isCluster = cluster.crags.length > 1;
@@ -255,6 +260,7 @@ export default function CragMap({
         });
       };
 
+      renderMarkersRef.current = renderMarkers;
       renderMarkers();
       map.on('zoomend', renderMarkers);
 
@@ -283,12 +289,20 @@ export default function CragMap({
     };
   }, []);
 
+  // Re-render markers whenever crags prop changes
+  useEffect(() => {
+    cragsRef.current = crags;
+    renderMarkersRef.current?.();
+  }, [crags]);
+
   // Pan to selected crag
   useEffect(() => {
     if (!mapRef.current || !selectedCragId) return;
     const crag = crags.find((c) => c.id === selectedCragId);
-    if (crag?.latitude) {
-      mapRef.current.panTo([crag.latitude, crag.longitude], { animate: true });
+    const lat = Number(crag?.latitude);
+    const lng = Number(crag?.longitude);
+    if (isFinite(lat) && isFinite(lng)) {
+      mapRef.current.panTo([lat, lng], { animate: true });
     }
   }, [selectedCragId, crags]);
 

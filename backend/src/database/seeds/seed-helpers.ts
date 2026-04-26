@@ -92,3 +92,51 @@ export function sportRoute(
     isActive: true,
   };
 }
+
+// Shorthand for a boulder problem (Fontainebleau grade)
+export function boulderRoute(
+  name: string,
+  fontGrade: string, // e.g. '6A', '7B+', '5'
+  buttress: Buttress,
+  opts: { height?: number; description?: string; sortOrder?: number } = {},
+): Partial<Route> {
+  return {
+    name,
+    climbingType: ClimbingType.BOULDER,
+    gradeSystem: GradeSystem.FONT,
+    grade: fontGrade,
+    gradeDifficulty: diff(fontGrade.toLowerCase()),
+    pitches: 1,
+    heightMetres: opts.height,
+    description: opts.description,
+    sortOrder: opts.sortOrder ?? 0,
+    buttress,
+    buttressId: buttress.id,
+    isActive: true,
+  };
+}
+
+// Patch existing region country values to proper per-country strings
+export async function patchRegionCountries(repo: Repository<Region>) {
+  const COUNTRIES: Record<string, string> = {
+    'Peak District': 'England', 'Lake District': 'England', 'Yorkshire Dales': 'England',
+    'Yorkshire': 'England', 'Northumberland': 'England', 'Kent Sandstone': 'England',
+    'Cornwall': 'England', 'Devon Coast': 'England', 'Dartmoor': 'England',
+    'Avon & Bristol': 'England', 'Dorset': 'England', 'Wye Valley & Forest of Dean': 'England',
+    'East Midlands': 'England', 'South East': 'England',
+    'North Wales': 'Wales', 'Snowdonia': 'Wales', 'Anglesey': 'Wales',
+    'Gower Peninsula': 'Wales', 'Pembroke': 'Wales', 'Pembrokeshire': 'Wales',
+    'Mid-Wales': 'Wales', 'Wye Valley': 'Wales',
+    'Central Scotland': 'Scotland', 'Scottish Highlands': 'Scotland',
+    'Isle of Skye': 'Scotland', 'Cairngorms': 'Scotland', 'Argyll': 'Scotland',
+    'Dumbarton': 'Scotland',
+  };
+  const regions = await repo.find();
+  for (const r of regions) {
+    const country = COUNTRIES[r.name];
+    if (country && r.country !== country) {
+      r.country = country;
+      await repo.save(r);
+    }
+  }
+}

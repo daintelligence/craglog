@@ -28,7 +28,7 @@ export class Buttress {
   @JoinColumn({ name: 'crag_id' })
   crag: Crag;
 
-  @Column()
+  @Column({ name: 'crag_id' })
   cragId: string;
 
   @OneToMany(() => Route, (route) => route.buttress, { cascade: true })
