@@ -9,6 +9,7 @@ import { Ascent } from '../../modules/ascents/entities/ascent.entity';
 import { UserBadge } from '../../modules/badges/entities/user-badge.entity';
 import { seedDemoAscents } from './demo-ascents.seed';
 import { patchRegionCountries } from './seed-helpers';
+import * as bcrypt from 'bcryptjs';
 
 const ds = new DataSource({
   type: 'postgres',
@@ -55,6 +56,19 @@ async function run() {
   const regionRepo = ds.getRepository(Region);
   await patchRegionCountries(regionRepo);
   console.log('  ✓ Region countries patched');
+
+  // Ensure demo user exists before seeding ascents
+  const userRepo = ds.getRepository(User);
+  const demoUser = await userRepo.findOne({ where: { email: 'demo@craglog.app' } });
+  if (!demoUser) {
+    await userRepo.save(userRepo.create({
+      email: 'demo@craglog.app',
+      name: 'Demo Climber',
+      username: 'demo',
+      password: await bcrypt.hash('demo1234', 12),
+    }));
+    console.log('  ✓ Demo user created (demo@craglog.app / demo1234)');
+  }
 
   await seedDemoAscents(ds);
   console.log('  ✓ Demo ascents seeded');
