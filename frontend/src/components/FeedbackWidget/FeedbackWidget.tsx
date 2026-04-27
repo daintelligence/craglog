@@ -21,6 +21,7 @@ export function FeedbackWidget() {
   const [hoverRating, setHover]   = useState<number | null>(null);
   const [loading, setLoading]     = useState(false);
   const [done, setDone]           = useState(false);
+  const [error, setError]         = useState(false);
   const textareaRef               = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export function FeedbackWidget() {
     setRating(null);
     setHover(null);
     setDone(false);
+    setError(false);
   }
 
   function handleClose() {
@@ -45,6 +47,7 @@ export function FeedbackWidget() {
   async function handleSubmit() {
     if (!message.trim()) return;
     setLoading(true);
+    setError(false);
     try {
       await feedbackApi.submit({
         category,
@@ -54,6 +57,8 @@ export function FeedbackWidget() {
       });
       setDone(true);
       setTimeout(handleClose, 2200);
+    } catch {
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -177,6 +182,10 @@ export function FeedbackWidget() {
                     <span className="text-xs text-stone-400">{rating}/5</span>
                   )}
                 </div>
+
+                {error && (
+                  <p className="text-xs text-red-500 text-center mb-3">Something went wrong — please try again.</p>
+                )}
 
                 {/* Submit */}
                 <button

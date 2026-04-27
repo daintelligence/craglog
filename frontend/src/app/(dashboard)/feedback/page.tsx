@@ -34,6 +34,7 @@ export default function FeedbackPage() {
   const [hoverRating, setHover] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { data: history = [], isLoading: historyLoading } = useQuery({
     queryKey: ['feedback-mine'],
@@ -44,6 +45,7 @@ export default function FeedbackPage() {
     e.preventDefault();
     if (!message.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       await feedbackApi.submit({
         category,
@@ -59,6 +61,8 @@ export default function FeedbackPage() {
         setRating(null);
         setCategory('idea');
       }, 3000);
+    } catch {
+      setError('Something went wrong — please try again.');
     } finally {
       setLoading(false);
     }
@@ -140,6 +144,10 @@ export default function FeedbackPage() {
               </div>
               {rating && <span className="text-xs text-stone-400">{rating}/5</span>}
             </div>
+
+            {error && (
+              <p className="text-sm text-red-500 text-center">{error}</p>
+            )}
 
             <button
               type="submit"
