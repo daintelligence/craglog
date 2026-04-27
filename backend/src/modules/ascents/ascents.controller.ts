@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AscentsService } from './ascents.service';
-import { CreateAscentDto, BulkCreateAscentDto } from './dto/create-ascent.dto';
+import { CreateAscentDto, BulkCreateAscentDto, GymLogDto } from './dto/create-ascent.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -28,6 +28,12 @@ export class AscentsController {
   @ApiOperation({ summary: 'Log a new ascent — returns earned badges' })
   create(@CurrentUser('id') userId: string, @Body() dto: CreateAscentDto) {
     return this.ascentsService.create(userId, dto);
+  }
+
+  @Post('gym')
+  @ApiOperation({ summary: 'Quick gym log — grade + style, no route needed' })
+  gymLog(@CurrentUser('id') userId: string, @Body() dto: GymLogDto) {
+    return this.ascentsService.gymLog(userId, dto);
   }
 
   @Post('bulk')

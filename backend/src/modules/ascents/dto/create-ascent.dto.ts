@@ -8,14 +8,16 @@ import {
   Max,
   IsBoolean,
   IsArray,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { AscentType } from '../entities/ascent.entity';
 
 export class CreateAscentDto {
-  @ApiProperty({ description: 'Route UUID' })
+  @ApiProperty({ description: 'Route UUID', required: false })
+  @IsOptional()
   @IsString()
-  routeId: string;
+  routeId?: string;
 
   @ApiProperty({ description: 'Crag UUID — auto-resolved from route if omitted', required: false })
   @IsOptional()
@@ -67,4 +69,24 @@ export class CreateAscentDto {
 export class BulkCreateAscentDto {
   @IsArray()
   ascents: CreateAscentDto[];
+}
+
+export class GymLogDto {
+  @ApiProperty({ example: '6b+' })
+  @IsString()
+  @MaxLength(20)
+  grade: string;
+
+  @ApiProperty({ enum: ['lead', 'toprope', 'autobelay', 'boulder'] })
+  @IsEnum(['lead', 'toprope', 'autobelay', 'boulder'])
+  style: 'lead' | 'toprope' | 'autobelay' | 'boulder';
+
+  @ApiProperty({ example: '2024-05-20' })
+  @IsDateString()
+  date: string;
+
+  @ApiProperty({ enum: AscentType, required: false, default: AscentType.REDPOINT })
+  @IsOptional()
+  @IsEnum(AscentType)
+  ascentType?: AscentType;
 }

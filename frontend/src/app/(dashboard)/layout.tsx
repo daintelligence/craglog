@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, PlusCircle, Map, BookOpen, UserCircle, Mountain,
-  Wifi, WifiOff, RefreshCw, Download, X,
+  Wifi, WifiOff, RefreshCw, Download, X, Dumbbell,
 } from 'lucide-react';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -20,7 +20,7 @@ const NAV = [
   { href: '/dashboard', label: 'Home',    icon: LayoutDashboard },
   { href: '/crags',     label: 'Explore', icon: Map },
   { href: '/log',       label: 'Log',     icon: PlusCircle, fab: true },
-  { href: '/logbook',   label: 'Logbook', icon: BookOpen },
+  { href: '/gym',       label: 'Gym',     icon: Dumbbell },
   { href: '/profile',   label: 'Profile', icon: UserCircle },
 ];
 

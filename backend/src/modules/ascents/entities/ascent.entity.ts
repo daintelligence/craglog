@@ -37,12 +37,12 @@ export class Ascent {
   @Index()
   userId: string;
 
-  @ManyToOne(() => Route, { onDelete: 'CASCADE', eager: false })
+  @ManyToOne(() => Route, { onDelete: 'CASCADE', eager: false, nullable: true })
   @JoinColumn({ name: 'route_id' })
-  route: Route;
+  route: Route | null;
 
-  @Column({ name: 'route_id' })
-  routeId: string;
+  @Column({ name: 'route_id', nullable: true })
+  routeId: string | null;
 
   @ManyToOne(() => Crag, { onDelete: 'SET NULL', nullable: true, eager: false })
   @JoinColumn({ name: 'crag_id' })
@@ -76,6 +76,13 @@ export class Ascent {
 
   @Column({ nullable: true, length: 50 })
   conditions: string;
+
+  // Gym / free-form ascents (no route record)
+  @Column({ name: 'free_grade', nullable: true, length: 20 })
+  freeGrade: string | null;
+
+  @Column({ name: 'gym_style', nullable: true, length: 20 })
+  gymStyle: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

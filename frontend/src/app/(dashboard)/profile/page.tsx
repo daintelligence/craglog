@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   User as UserIcon, Sun, Moon, ChevronRight, Download, LogOut,
   Award, Mountain, Calendar, TrendingUp, Edit2, Lock, Check,
-  X, Eye, EyeOff, Star, Shield, MessageSquare, UserPlus,
+  X, Eye, EyeOff, Star, Shield, MessageSquare, UserPlus, BookOpen,
 } from 'lucide-react';
 import { authApi, usersApi, statsApi, badgesApi, exportApi, getErrorMessage } from '@/lib/api';
 import { clearAuth, getStoredUser, saveAuth } from '@/lib/auth';
@@ -513,6 +513,13 @@ export default function ProfilePage() {
       <div>
         <SectionTitle>Your Data</SectionTitle>
         <Card>
+          <SettingRow
+            icon={BookOpen}
+            label="Logbook"
+            sublabel="All your logged ascents"
+            onClick={() => router.push('/logbook')}
+          />
+          <div className="divider mx-4" />
           <SettingRow
             icon={Download}
             label="Export Ascents"

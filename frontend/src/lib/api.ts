@@ -111,6 +111,8 @@ export const routesApi = {
 // ─── Ascents ──────────────────────────────────────────────────────────────────
 export const ascentsApi = {
   create: (data: any) => api.post('/ascents', data).then((r) => r.data),
+  gymLog: (data: { grade: string; style: string; date: string; ascentType?: string }) =>
+    api.post('/ascents/gym', data).then((r) => r.data),
   bulkCreate: (ascents: any[]) => api.post('/ascents/bulk', { ascents }).then((r) => r.data),
   list: (params?: any) => api.get('/ascents', { params }).then((r) => r.data),
   getById: (id: string) => api.get(`/ascents/${id}`).then((r) => r.data),

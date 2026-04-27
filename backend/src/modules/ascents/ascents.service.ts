@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, Between } from 'typeorm';
-import { Ascent } from './entities/ascent.entity';
-import { CreateAscentDto, BulkCreateAscentDto } from './dto/create-ascent.dto';
+import { Ascent, AscentType } from './entities/ascent.entity';
+import { CreateAscentDto, BulkCreateAscentDto, GymLogDto } from './dto/create-ascent.dto';
 import { Route } from '../routes/entities/route.entity';
 import { BadgeEngineService } from '../badges/badge-engine.service';
 
@@ -26,28 +26,37 @@ export class AscentsService {
   ) {}
 
   async create(userId: string, dto: CreateAscentDto): Promise<{ ascent: Ascent; newBadges: any[] }> {
-    const route = await this.routeRepo.findOne({
-      where: { id: dto.routeId },
-      relations: ['buttress', 'buttress.crag'],
-    });
-    if (!route) throw new NotFoundException('Route not found');
+    let cragId = dto.cragId;
 
-    const cragId = dto.cragId || route.buttress?.cragId;
+    if (dto.routeId) {
+      const route = await this.routeRepo.findOne({
+        where: { id: dto.routeId },
+        relations: ['buttress', 'buttress.crag'],
+      });
+      if (!route) throw new NotFoundException('Route not found');
+      cragId = cragId || route.buttress?.cragId;
+    }
 
-    const ascent = this.ascentRepo.create({
-      ...dto,
-      userId,
-      cragId,
-    });
-
+    const ascent = this.ascentRepo.create({ ...dto, userId, cragId });
     const saved = await this.ascentRepo.save(ascent);
-
     const newBadges = await this.badgeEngine.evaluateForUser(userId);
 
-    return {
-      ascent: await this.findById(saved.id, userId),
-      newBadges,
-    };
+    return { ascent: await this.findById(saved.id, userId), newBadges };
+  }
+
+  async gymLog(userId: string, dto: GymLogDto): Promise<{ ascent: Ascent; newBadges: any[] }> {
+    const ascent = this.ascentRepo.create({
+      userId,
+      routeId: null,
+      cragId: null,
+      freeGrade: dto.grade,
+      gymStyle: dto.style,
+      ascentType: dto.ascentType ?? AscentType.REDPOINT,
+      date: dto.date,
+    });
+    const saved = await this.ascentRepo.save(ascent);
+    const newBadges = await this.badgeEngine.evaluateForUser(userId);
+    return { ascent: saved, newBadges };
   }
 
   async bulkCreate(userId: string, dto: BulkCreateAscentDto): Promise<{ count: number; newBadges: any[] }> {
