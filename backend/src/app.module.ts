@@ -52,7 +52,10 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
         type: 'postgres',
         url: config.get<string>('database.url'),
         entities: [__dirname + '/modules/**/*.entity{.ts,.js}'],
-        synchronize: config.get<string>('env') !== 'production',
+        // TYPEORM_SYNC=true enables synchronize for first-deploy schema creation
+        synchronize:
+          config.get<string>('env') !== 'production' ||
+          process.env.TYPEORM_SYNC === 'true',
         logging: false,
         extra: { max: 20 },
       }),

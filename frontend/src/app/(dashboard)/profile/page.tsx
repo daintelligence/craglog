@@ -406,7 +406,8 @@ export default function ProfilePage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await authApi.logout();
     clearAuth();
     router.push('/login');
   };

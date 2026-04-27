@@ -6,6 +6,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { formatDistance } from '@/lib/utils';
 import type { Crag } from '@/types';
 import { Search, MapPin, Navigation, Loader2, ChevronRight, Mountain, ChevronDown } from 'lucide-react';
+import { SkeletonList } from '@/components/Skeleton';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -171,11 +172,7 @@ export default function CragsPage() {
 
       {/* Crag list */}
       <div className="space-y-2">
-        {isLoading && (
-          <div className="flex items-center justify-center py-8 text-stone-400">
-            <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading crags…
-          </div>
-        )}
+        {isLoading && <SkeletonList count={6} />}
         {!isLoading && crags.length === 0 && (
           <div className="card p-8 text-center">
             <Mountain className="w-10 h-10 text-stone-200 mx-auto mb-3" />

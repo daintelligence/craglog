@@ -1,5 +1,7 @@
 import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { createHash, randomBytes } from 'crypto';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -9,6 +11,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -16,12 +19,7 @@ export class AuthService {
     if (existing) throw new ConflictException('Email already registered');
 
     const user = await this.usersService.create(dto);
-    const token = this.signToken(user.id, user.email);
-
-    return {
-      accessToken: token,
-      user: this.sanitize(user),
-    };
+    return this.issueTokens(user.id, user.email, user);
   }
 
   async login(dto: LoginDto) {
@@ -31,10 +29,30 @@ export class AuthService {
     const valid = await user.validatePassword(dto.password);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    return {
-      accessToken: this.signToken(user.id, user.email),
-      user: this.sanitize(user),
-    };
+    return this.issueTokens(user.id, user.email, user);
+  }
+
+  async refresh(rawRefreshToken: string) {
+    let payload: { sub: string; email: string };
+    try {
+      payload = this.jwtService.verify(rawRefreshToken, {
+        secret: this.configService.get<string>('jwt.refreshSecret'),
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const user = await this.usersService.findById(payload.sub);
+    if (!user?.refreshTokenHash) throw new UnauthorizedException('Session expired');
+
+    const incoming = this.hashToken(rawRefreshToken);
+    if (incoming !== user.refreshTokenHash) throw new UnauthorizedException('Invalid refresh token');
+
+    return this.issueTokens(user.id, user.email, user);
+  }
+
+  async logout(userId: string): Promise<void> {
+    await this.usersService.update(userId, { refreshTokenHash: null });
   }
 
   async getProfile(userId: string) {
@@ -42,12 +60,48 @@ export class AuthService {
     return this.sanitize(user);
   }
 
-  private signToken(userId: string, email: string): string {
-    return this.jwtService.sign({ sub: userId, email });
+  private async issueTokens(userId: string, email: string, user: any) {
+    const accessToken = this.signAccessToken(userId, email);
+    const refreshToken = this.signRefreshToken(userId, email);
+
+    await this.usersService.update(userId, {
+      refreshTokenHash: this.hashToken(refreshToken),
+    });
+
+    return {
+      accessToken,
+      refreshToken,
+      user: this.sanitize(user),
+    };
+  }
+
+  private signAccessToken(userId: string, email: string): string {
+    return this.jwtService.sign(
+      { sub: userId, email },
+      {
+        secret: this.configService.get<string>('jwt.secret'),
+        expiresIn: this.configService.get<string>('jwt.expiresIn') ?? '15m',
+      },
+    );
+  }
+
+  private signRefreshToken(userId: string, email: string): string {
+    return this.jwtService.sign(
+      { sub: userId, email },
+      {
+        secret: this.configService.get<string>('jwt.refreshSecret'),
+        expiresIn: this.configService.get<string>('jwt.refreshExpiresIn') ?? '7d',
+      },
+    );
+  }
+
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   private sanitize(user: any) {
-    const { password, ...safe } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, refreshTokenHash, ...safe } = user;
     return safe;
   }
 }

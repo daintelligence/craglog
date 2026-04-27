@@ -18,6 +18,7 @@ import {
   MapPin, Navigation, Search, Check, ChevronRight, RotateCcw, Star, Loader2,
   Heart, Clock, Zap, Filter, X, PlusCircle, Mountain,
 } from 'lucide-react';
+import { SkeletonList } from '@/components/Skeleton';
 import { cn } from '@/lib/utils';
 
 type Step = 'crag' | 'buttress' | 'route' | 'style' | 'done';
@@ -488,6 +489,16 @@ function LogPageInner() {
             </div>
           )}
 
+          {/* GPS loading skeleton — shown before lat resolves on cold backend */}
+          {gpsLoading && !lat && !cragSearch && (
+            <div>
+              <p className="text-xs font-bold text-stone-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <Navigation className="w-3 h-3 animate-pulse" /> Getting location…
+              </p>
+              <SkeletonList count={3} />
+            </div>
+          )}
+
           {/* GPS / search results */}
           {(cragSearch || lat) && (
             <div>
@@ -523,11 +534,7 @@ function LogPageInner() {
           </button>
           <h2 className="text-xl font-bold text-stone-900 dark:text-stone-50 mb-4">Which buttress?</h2>
           <div className="space-y-2">
-            {buttressLoading && (
-              <div className="flex items-center gap-2 text-sm text-stone-400 py-4 justify-center">
-                <Loader2 className="w-4 h-4 animate-spin" /> Loading…
-              </div>
-            )}
+            {buttressLoading && <SkeletonList count={4} />}
             {(buttresses as Buttress[]).map((b) => (
               <button key={b.id}
                 onClick={() => { setSelectedButtress(b); setStep('route'); }}

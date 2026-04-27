@@ -41,7 +41,8 @@ export function useAuth() {
     }
   }, [router]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await authApi.logout();
     clearAuth();
     setUser(null);
     router.push('/login');

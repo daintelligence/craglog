@@ -6,6 +6,7 @@ export const api = axios.create({
   baseURL: `${BASE_URL}/api`,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
 // Attach JWT from localStorage on every request
@@ -17,18 +18,62 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 — redirect to login
+let isRefreshing = false;
+let refreshQueue: Array<(token: string | null) => void> = [];
+
+function drainQueue(token: string | null) {
+  refreshQueue.forEach((cb) => cb(token));
+  refreshQueue = [];
+}
+
+// Handle 401 — try refresh, then retry; on second 401 redirect to login
 api.interceptors.response.use(
   (res) => res,
-  (err: AxiosError) => {
-    if (err.response?.status === 401 && typeof window !== 'undefined') {
-      if (!window.location.pathname.includes('/login')) {
-        localStorage.removeItem('craglog_token');
-        localStorage.removeItem('craglog_user');
-        window.location.href = '/login';
-      }
+  async (err: AxiosError) => {
+    const original = err.config as any;
+    if (
+      err.response?.status !== 401 ||
+      original?._retry ||
+      typeof window === 'undefined' ||
+      window.location.pathname.includes('/login')
+    ) {
+      return Promise.reject(err);
     }
-    return Promise.reject(err);
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        refreshQueue.push((token) => {
+          if (!token) return reject(err);
+          original.headers.Authorization = `Bearer ${token}`;
+          resolve(api(original));
+        });
+      });
+    }
+
+    original._retry = true;
+    isRefreshing = true;
+
+    try {
+      const { data } = await axios.post(
+        `${BASE_URL}/api/auth/refresh`,
+        {},
+        { withCredentials: true },
+      );
+      const newToken: string = data.accessToken;
+      localStorage.setItem('craglog_token', newToken);
+      api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+      original.headers.Authorization = `Bearer ${newToken}`;
+      drainQueue(newToken);
+      return api(original);
+    } catch {
+      drainQueue(null);
+      localStorage.removeItem('craglog_token');
+      localStorage.removeItem('craglog_user');
+      window.location.href = '/login';
+      return Promise.reject(err);
+    } finally {
+      isRefreshing = false;
+    }
   },
 );
 
@@ -38,6 +83,8 @@ export const authApi = {
     api.post('/auth/register', data).then((r) => r.data),
   login: (data: { email: string; password: string }) =>
     api.post('/auth/login', data).then((r) => r.data),
+  refresh: () => api.post('/auth/refresh').then((r) => r.data),
+  logout: () => api.post('/auth/logout').catch(() => {}),
   me: () => api.get('/auth/me').then((r) => r.data),
 };
 
@@ -115,6 +162,8 @@ export const geoApi = {
 export const feedbackApi = {
   submit: (data: { category: string; message: string; rating?: number; context?: string }) =>
     api.post('/feedback', data).then((r) => r.data),
+  list: () => api.get('/feedback').then((r) => r.data),
+  resolve: (id: string) => api.patch(`/feedback/${id}/resolve`).then((r) => r.data),
 };
 
 // ─── Export ───────────────────────────────────────────────────────────────────

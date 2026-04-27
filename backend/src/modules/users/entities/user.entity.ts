@@ -38,6 +38,9 @@ export class User {
   @Column({ nullable: true })
   avatarUrl: string;
 
+  @Column({ nullable: true, name: 'refresh_token_hash' })
+  refreshTokenHash: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 
