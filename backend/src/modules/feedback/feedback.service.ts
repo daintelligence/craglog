@@ -25,6 +25,13 @@ export class FeedbackService {
     });
   }
 
+  findMine(userId: string): Promise<Feedback[]> {
+    return this.repo.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async resolve(id: string): Promise<void> {
     await this.repo.update(id, { resolved: true });
   }

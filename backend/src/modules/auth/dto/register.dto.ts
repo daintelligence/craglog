@@ -23,4 +23,9 @@ export class RegisterDto {
   @IsString()
   @MaxLength(50)
   username?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  inviteToken?: string;
 }

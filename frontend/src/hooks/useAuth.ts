@@ -26,11 +26,11 @@ export function useAuth() {
     }
   }, [router]);
 
-  const register = useCallback(async (name: string, email: string, password: string) => {
+  const register = useCallback(async (name: string, email: string, password: string, inviteToken?: string) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authApi.register({ name, email, password });
+      const data = await authApi.register({ name, email, password, inviteToken });
       saveAuth(data.accessToken, data.user);
       setUser(data.user);
       router.push('/dashboard');

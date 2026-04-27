@@ -8,10 +8,12 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UsersModule } from '../users/users.module';
+import { InvitesModule } from '../invites/invites.module';
 
 @Module({
   imports: [
     UsersModule,
+    InvitesModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

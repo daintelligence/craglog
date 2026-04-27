@@ -79,7 +79,7 @@ api.interceptors.response.use(
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const authApi = {
-  register: (data: { email: string; name: string; password: string; username?: string }) =>
+  register: (data: { email: string; name: string; password: string; username?: string; inviteToken?: string }) =>
     api.post('/auth/register', data).then((r) => r.data),
   login: (data: { email: string; password: string }) =>
     api.post('/auth/login', data).then((r) => r.data),
@@ -158,10 +158,20 @@ export const geoApi = {
   bounds: () => api.get('/geo/bounds').then((r) => r.data),
 };
 
+// ─── Invites ──────────────────────────────────────────────────────────────────
+export const invitesApi = {
+  create: (data: { email?: string; note?: string }) =>
+    api.post('/invites', data).then((r) => r.data),
+  list: () => api.get('/invites').then((r) => r.data),
+  validate: (token: string) => api.get(`/invites/validate/${token}`).then((r) => r.data),
+  revoke: (id: string) => api.delete(`/invites/${id}`),
+};
+
 // ─── Feedback ─────────────────────────────────────────────────────────────────
 export const feedbackApi = {
   submit: (data: { category: string; message: string; rating?: number; context?: string }) =>
     api.post('/feedback', data).then((r) => r.data),
+  mine: () => api.get('/feedback/mine').then((r) => r.data),
   list: () => api.get('/feedback').then((r) => r.data),
   resolve: (id: string) => api.patch(`/feedback/${id}/resolve`).then((r) => r.data),
 };

@@ -17,6 +17,7 @@ import { ExportModule } from './modules/export/export.module';
 import { HealthModule } from './modules/health/health.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
+import { InvitesModule } from './modules/invites/invites.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
     HealthModule,
     ProjectsModule,
     FeedbackModule,
+    InvitesModule,
   ],
 })
 export class AppModule {}

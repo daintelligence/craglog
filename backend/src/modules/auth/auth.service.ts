@@ -1,8 +1,9 @@
 import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { createHash, randomBytes } from 'crypto';
+import { createHash } from 'crypto';
 import { UsersService } from '../users/users.service';
+import { InvitesService } from '../invites/invites.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -12,13 +13,20 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private invitesService: InvitesService,
   ) {}
 
   async register(dto: RegisterDto) {
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) throw new ConflictException('Email already registered');
 
-    const user = await this.usersService.create(dto);
+    const { inviteToken, ...userData } = dto;
+    const user = await this.usersService.create(userData);
+
+    if (inviteToken) {
+      await this.invitesService.markUsed(inviteToken, user.id);
+    }
+
     return this.issueTokens(user.id, user.email, user);
   }
 

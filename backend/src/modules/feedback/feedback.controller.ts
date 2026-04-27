@@ -1,6 +1,7 @@
 import {
   Controller, Get, Post, Patch, Body, Param, UseGuards, Request,
 } from '@nestjs/common';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
@@ -19,6 +20,11 @@ export class FeedbackController {
   create(@Body() dto: CreateFeedbackDto, @Request() req: any) {
     const userId: string | undefined = req.user?.id;
     return this.service.create(dto, userId);
+  }
+
+  @Get('mine')
+  findMine(@CurrentUser('id') userId: string) {
+    return this.service.findMine(userId);
   }
 
   @Get()

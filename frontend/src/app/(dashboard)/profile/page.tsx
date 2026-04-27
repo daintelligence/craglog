@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   User as UserIcon, Sun, Moon, ChevronRight, Download, LogOut,
   Award, Mountain, Calendar, TrendingUp, Edit2, Lock, Check,
-  X, Eye, EyeOff, Star, Shield,
+  X, Eye, EyeOff, Star, Shield, MessageSquare, UserPlus,
 } from 'lucide-react';
 import { authApi, usersApi, statsApi, badgesApi, exportApi, getErrorMessage } from '@/lib/api';
 import { clearAuth, getStoredUser, saveAuth } from '@/lib/auth';
@@ -527,6 +527,37 @@ export default function ProfilePage() {
             onClick={() => {}}
             right={<span className="text-xs text-stone-400">Coming soon</span>}
           />
+        </Card>
+      </div>
+
+      {/* ── Feedback ───────────────────────────────────────────────────── */}
+      <div>
+        <SectionTitle>Beta</SectionTitle>
+        <Card>
+          <SettingRow
+            icon={MessageSquare}
+            label="Share feedback"
+            sublabel="Suggest features, report bugs"
+            onClick={() => router.push('/feedback')}
+          />
+          {user?.isAdmin && (
+            <>
+              <div className="divider mx-4" />
+              <SettingRow
+                icon={UserPlus}
+                label="Invite links"
+                sublabel="Create links to invite climbers"
+                onClick={() => router.push('/admin/invites')}
+              />
+              <div className="divider mx-4" />
+              <SettingRow
+                icon={Shield}
+                label="Admin — Feedback inbox"
+                sublabel="View all submitted feedback"
+                onClick={() => router.push('/admin/feedback')}
+              />
+            </>
+          )}
         </Card>
       </div>
 
