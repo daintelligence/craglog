@@ -186,9 +186,9 @@ export async function seedPeakDistrictExtended(ds: DataSource) {
     tradRoute('Millrace Wall', 'E2', '5b', blackNorth, { height: 11, sortOrder: 2 }),
   ]);
 
-  // ── The Roches ────────────────────────────────────────────────────────────
+  // ── The Roaches ───────────────────────────────────────────────────────────
   const roches = await upsertCrag(cragRepo, {
-    name: 'The Roches', region: peak, regionId: peak.id,
+    name: 'The Roaches', region: peak, regionId: peak.id,
     latitude: 53.1444, longitude: -2.0001, rockType: RockType.GRITSTONE,
     description: 'A long gritstone edge in the Staffordshire Moorlands. Sloth is one of the most famous gritstone traverses. The Roches gives climbing with real character.',
     approach: 'Park in the Upper Hulme lay-by (SJ 0050 6224). 15 min walk up to the crag.',

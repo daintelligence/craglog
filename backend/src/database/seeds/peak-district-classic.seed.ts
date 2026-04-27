@@ -127,9 +127,9 @@ export async function seedPeakDistrictClassic(ds: DataSource) {
   await r(tradRoute('Brimstone', 'E2', '5b', aquarius, { height: 16 }));
   await r(sportRoute('Kink', '7a', aquarius, { height: 18 }));
 
-  // ── Black Rocks ───────────────────────────────────────────────────────────────
+  // ── Black Rocks, Cromford ─────────────────────────────────────────────────
   const blackRocks = await crag(
-    'Black Rocks', 53.1037, -1.5483,
+    'Black Rocks, Cromford', 53.0836, -1.5501,
     'Dramatic gritstone tor above Cromford with a concentration of desperate crack problems. The Promontory Traverse is legendary.',
   );
 

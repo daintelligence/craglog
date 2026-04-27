@@ -32,6 +32,11 @@ import { seedWalesExtra } from './wales-extra.seed';
 import { seedSouthWestExtended } from './south-west-extended.seed';
 import { seedSouthEastSandstone } from './south-east-sandstone.seed';
 import { seedLakeDistrictBorrowdale } from './lake-district-borrowdale.seed';
+import { seedLakeDistrictMore } from './lake-district-more.seed';
+import { seedScotlandMore } from './scotland-more.seed';
+import { seedNorthernIreland } from './northern-ireland.seed';
+import { seedNorthWalesMore } from './north-wales-more.seed';
+import { seedPembrokeMore } from './pembroke-more.seed';
 import { seedDemoAscents } from './demo-ascents.seed';
 import { patchRegionCountries } from './seed-helpers';
 import * as bcrypt from 'bcryptjs';
@@ -123,6 +128,21 @@ async function seed() {
 
   await seedLakeDistrictBorrowdale(ds);
   console.log("  ✓ Lake District Borrowdale seeded (Shepherd's Crag, Castle Rock, Hodge Close, Falcon Crag, Buckstone How)");
+
+  await seedLakeDistrictMore(ds);
+  console.log('  ✓ Lake District more seeded (Grey Crag, Raven Crag Thirlmere, Chapel Head Scar, Dow Crag, St Bees Head, Buckbarrow)');
+
+  await seedScotlandMore(ds);
+  console.log('  ✓ Scotland more seeded (Reiff, Diabaig, Etive Slabs, Dumbarton extended, Glenmore Boulders, Carn Dearg)');
+
+  await seedNorthernIreland(ds);
+  console.log('  ✓ Northern Ireland seeded (Fair Head, Binnian, Binnian South Tor, Malin Head)');
+
+  await seedNorthWalesMore(ds);
+  console.log('  ✓ North Wales more seeded (Lliwedd, Craig yr Ysfa, Llech Ddu, Bochlwyd, Clogwyn y Ddysgl, Porth Ysgo)');
+
+  await seedPembrokeMore(ds);
+  console.log("  ✓ Pembroke more seeded (Huntsman's Leap, Stennis Head, Stackpole extended, St Bride's Haven, Elegug Stacks)");
 
   // Patch region countries (UK → England/Wales/Scotland)
   const regionRepo = ds.getRepository(Region);
