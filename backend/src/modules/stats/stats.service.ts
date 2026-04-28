@@ -127,7 +127,7 @@ export class StatsService {
        JOIN routes r ON r.id = a.route_id
        LEFT JOIN crags c ON c.id = a.crag_id
        WHERE a.user_id = $1
-       ORDER BY a.date DESC, a.created_at DESC
+       ORDER BY a.date DESC, a."createdAt" DESC
        LIMIT 10`,
       [userId],
     );
@@ -175,28 +175,28 @@ export class StatsService {
     const [hardestOnsight, hardestFlash, hardestRedpoint, longestRoute, mostVisited] =
       await Promise.all([
         this.dataSource.query(
-          `SELECT r.grade, r.grade_system, r.grade_difficulty, r.name as route_name, c.name as crag_name
+          `SELECT r.grade, r."gradeSystem", r."gradeDifficulty", r.name as route_name, c.name as crag_name
            FROM ascents a JOIN routes r ON r.id = a.route_id LEFT JOIN crags c ON c.id = a.crag_id
-           WHERE a.user_id = $1 AND a.ascent_type = 'onsight'
-           ORDER BY r.grade_difficulty DESC LIMIT 1`,
+           WHERE a.user_id = $1 AND a."ascentType" = 'onsight'
+           ORDER BY r."gradeDifficulty" DESC LIMIT 1`,
           [userId],
         ),
         this.dataSource.query(
-          `SELECT r.grade, r.grade_system, r.grade_difficulty, r.name as route_name, c.name as crag_name
+          `SELECT r.grade, r."gradeSystem", r."gradeDifficulty", r.name as route_name, c.name as crag_name
            FROM ascents a JOIN routes r ON r.id = a.route_id LEFT JOIN crags c ON c.id = a.crag_id
-           WHERE a.user_id = $1 AND a.ascent_type = 'flash'
-           ORDER BY r.grade_difficulty DESC LIMIT 1`,
+           WHERE a.user_id = $1 AND a."ascentType" = 'flash'
+           ORDER BY r."gradeDifficulty" DESC LIMIT 1`,
           [userId],
         ),
         this.dataSource.query(
-          `SELECT r.grade, r.grade_system, r.grade_difficulty, r.name as route_name, c.name as crag_name
+          `SELECT r.grade, r."gradeSystem", r."gradeDifficulty", r.name as route_name, c.name as crag_name
            FROM ascents a JOIN routes r ON r.id = a.route_id LEFT JOIN crags c ON c.id = a.crag_id
-           WHERE a.user_id = $1 AND a.ascent_type = 'redpoint'
-           ORDER BY r.grade_difficulty DESC LIMIT 1`,
+           WHERE a.user_id = $1 AND a."ascentType" = 'redpoint'
+           ORDER BY r."gradeDifficulty" DESC LIMIT 1`,
           [userId],
         ),
         this.dataSource.query(
-          `SELECT r.name as route_name, r.height, c.name as crag_name
+          `SELECT r.name as route_name, r."heightMetres", c.name as crag_name
            FROM ascents a JOIN routes r ON r.id = a.route_id LEFT JOIN crags c ON c.id = a.crag_id
            WHERE a.user_id = $1 AND r."heightMetres" IS NOT NULL
            ORDER BY r."heightMetres" DESC LIMIT 1`,
