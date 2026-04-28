@@ -1,13 +1,14 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Mountain, MapPin, PlusCircle, Target, ChevronDown,
   ChevronUp, Car, Footprints, Info, Cloud, Wind, Droplets, Users,
+  Search, Filter,
 } from 'lucide-react';
 import Link from 'next/link';
-import { cragsApi, projectsApi } from '@/lib/api';
+import { cragsApi, projectsApi, ascentsApi } from '@/lib/api';
 import { GradeChip } from '@/components/GradeChip';
 import { EmptyState } from '@/components/EmptyState';
 import { cn } from '@/lib/utils';
@@ -120,7 +121,20 @@ function ConditionsWidget({ cragId }: { cragId: string }) {
   );
 }
 
-function RouteRow({ route, cragId }: { route: Route; cragId: string }) {
+const TICK_DOT: Record<string, { cls: string; title: string }> = {
+  onsight:  { cls: 'bg-summit-500',  title: 'Onsight' },
+  flash:    { cls: 'bg-summit-400',  title: 'Flash' },
+  redpoint: { cls: 'bg-amber-400',   title: 'Redpoint' },
+  attempt:  { cls: 'bg-stone-300 dark:bg-stone-600', title: 'Attempted' },
+};
+
+function TickDot({ style }: { style?: string }) {
+  if (!style) return <span className="w-2 h-2 shrink-0" />;
+  const { cls, title } = TICK_DOT[style] ?? TICK_DOT.attempt;
+  return <span className={cn('w-2 h-2 rounded-full shrink-0', cls)} title={title} />;
+}
+
+function RouteRow({ route, cragId, tickStyle }: { route: Route; cragId: string; tickStyle?: string }) {
   const qc = useQueryClient();
   const { data: projects } = useQuery({ queryKey: ['projects'], queryFn: projectsApi.list });
   const onProject = projects?.some((p: any) => p.routeId === route.id) ?? false;
@@ -145,6 +159,7 @@ function RouteRow({ route, cragId }: { route: Route; cragId: string }) {
 
   return (
     <div className="flex items-center gap-2 py-2.5 border-b border-stone-50 dark:border-stone-800 last:border-0">
+      <TickDot style={tickStyle} />
       <GradeChip grade={route.grade} gradeSystem={route.gradeSystem} size="sm" />
       <div className="flex-1 min-w-0">
         <Link
@@ -186,9 +201,30 @@ function RouteRow({ route, cragId }: { route: Route; cragId: string }) {
   );
 }
 
-function ButtressAccordion({ buttress, cragId }: { buttress: Buttress; cragId: string }) {
+function ButtressAccordion({
+  buttress, cragId, ticks, filter,
+}: {
+  buttress: Buttress;
+  cragId: string;
+  ticks: Record<string, string>;
+  filter: { search: string; type: string; minDiff: number; maxDiff: number };
+}) {
   const [open, setOpen] = useState(true);
-  const routes: Route[] = (buttress as any).routes || [];
+  const allRoutes: Route[] = (buttress as any).routes || [];
+
+  const routes = useMemo(() => {
+    return [...allRoutes]
+      .filter((r) => {
+        if (filter.search && !r.name.toLowerCase().includes(filter.search.toLowerCase())) return false;
+        if (filter.type !== 'all' && r.climbingType !== filter.type) return false;
+        const d = r.gradeDifficulty ?? 0;
+        if (d < filter.minDiff || d > filter.maxDiff) return false;
+        return true;
+      })
+      .sort((a, b) => (a.gradeDifficulty ?? 0) - (b.gradeDifficulty ?? 0));
+  }, [allRoutes, filter]);
+
+  if (routes.length === 0 && (filter.search || filter.type !== 'all')) return null;
 
   return (
     <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-100 dark:border-stone-800 overflow-hidden">
@@ -210,11 +246,9 @@ function ButtressAccordion({ buttress, cragId }: { buttress: Buttress; cragId: s
 
       {open && routes.length > 0 && (
         <div className="px-4 pb-2">
-          {[...routes]
-            .sort((a, b) => (a.gradeDifficulty ?? 0) - (b.gradeDifficulty ?? 0))
-            .map((r) => (
-              <RouteRow key={r.id} route={r} cragId={cragId} />
-            ))}
+          {routes.map((r) => (
+            <RouteRow key={r.id} route={r} cragId={cragId} tickStyle={ticks[r.id]} />
+          ))}
         </div>
       )}
 
@@ -229,10 +263,20 @@ export default function CragDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+
   const { data: crag, isLoading } = useQuery({
     queryKey: ['crag', id],
     queryFn: () => cragsApi.getById(id),
     enabled: !!id,
+  });
+
+  const { data: ticks = {} } = useQuery({
+    queryKey: ['crag-ticks', id],
+    queryFn: () => ascentsApi.ticksForCrag(id),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
   });
 
   if (isLoading) {
@@ -356,13 +400,58 @@ export default function CragDetailPage() {
         />
       ) : (
         <div className="space-y-3">
-          <h2 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider px-1">
-            Routes by sector
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider px-1 flex-1">
+              Routes by sector
+            </h2>
+            {/* Tick legend */}
+            {Object.keys(ticks).length > 0 && (
+              <div className="flex items-center gap-2 text-[10px] text-stone-400">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-summit-500 inline-block" />OS/Flash</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />RP</span>
+              </div>
+            )}
+          </div>
+
+          {/* Filter bar */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400 pointer-events-none" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search routes…"
+                className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-50 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rock-500/40"
+              />
+            </div>
+            <div className="flex items-center gap-1 bg-stone-100 dark:bg-stone-800 rounded-xl p-1">
+              {['all', 'trad', 'sport', 'boulder'].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTypeFilter(t)}
+                  className={cn(
+                    'px-2.5 py-1 rounded-lg text-[10px] font-semibold capitalize transition-all',
+                    typeFilter === t
+                      ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-stone-50 shadow-sm'
+                      : 'text-stone-400 hover:text-stone-600',
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {[...buttresses]
             .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
             .map((b) => (
-              <ButtressAccordion key={b.id} buttress={b} cragId={crag.id} />
+              <ButtressAccordion
+                key={b.id}
+                buttress={b}
+                cragId={crag.id}
+                ticks={ticks}
+                filter={{ search, type: typeFilter, minDiff: 0, maxDiff: 9999 }}
+              />
             ))}
         </div>
       )}

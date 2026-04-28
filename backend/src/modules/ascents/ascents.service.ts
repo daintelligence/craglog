@@ -81,6 +81,23 @@ export class AscentsService {
     return { count: ascents.length, newBadges };
   }
 
+  async getTicksForCrag(userId: string, cragId: string): Promise<Record<string, string>> {
+    const STYLE_RANK: Record<string, number> = { onsight: 4, flash: 3, redpoint: 2, attempt: 1 };
+    const rows = await this.ascentRepo.find({
+      where: { userId, cragId },
+      select: ['routeId', 'ascentType'],
+    });
+    const best: Record<string, string> = {};
+    for (const r of rows) {
+      if (!r.routeId) continue;
+      const cur = best[r.routeId];
+      if (!cur || (STYLE_RANK[r.ascentType] ?? 0) > (STYLE_RANK[cur] ?? 0)) {
+        best[r.routeId] = r.ascentType;
+      }
+    }
+    return best;
+  }
+
   async findAll(userId: string, filter: AscentFilter = {}) {
     const qb = this.ascentRepo
       .createQueryBuilder('a')

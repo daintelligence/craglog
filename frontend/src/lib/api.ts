@@ -118,6 +118,8 @@ export const ascentsApi = {
   getById: (id: string) => api.get(`/ascents/${id}`).then((r) => r.data),
   update: (id: string, data: any) => api.put(`/ascents/${id}`, data).then((r) => r.data),
   delete: (id: string) => api.delete(`/ascents/${id}`),
+  ticksForCrag: (cragId: string): Promise<Record<string, string>> =>
+    api.get('/ascents/ticks', { params: { cragId } }).then((r) => r.data),
 };
 
 // ─── Stats ────────────────────────────────────────────────────────────────────

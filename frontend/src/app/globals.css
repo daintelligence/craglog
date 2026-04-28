@@ -24,10 +24,14 @@
     @apply bg-stone-950 text-stone-50;
   }
 
-  /* Minimum touch targets */
   button, [role="button"], a {
     @apply cursor-pointer;
-    min-height: 44px;
+  }
+}
+
+@layer utilities {
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 

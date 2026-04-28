@@ -58,6 +58,13 @@ export class AscentsController {
     return this.ascentsService.findAll(userId, filter);
   }
 
+  @Get('ticks')
+  @ApiOperation({ summary: 'Get best tick per route for a crag — routeId → ascentType map' })
+  @ApiQuery({ name: 'cragId', required: true })
+  getTicks(@CurrentUser('id') userId: string, @Query('cragId') cragId: string) {
+    return this.ascentsService.getTicksForCrag(userId, cragId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get single ascent' })
   findById(@CurrentUser('id') userId: string, @Param('id') id: string) {

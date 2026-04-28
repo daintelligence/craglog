@@ -181,7 +181,7 @@ async function run() {
     query UKAreas {
       areas(
         filter: {
-          path_tokens: { tokens: ["United Kingdom"], exactMatch: false, size: 1 }
+          path_tokens: { tokens: ["United Kingdom"], exactMatch: false }
           leaf_status: { isLeaf: true }
         }
         limit: 500
