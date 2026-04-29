@@ -52,6 +52,12 @@ export default function CragsPage() {
     ? allRegions.filter((r) => r.country === country)
     : allRegions;
 
+  const { data: mapPinsData } = useQuery({
+    queryKey: ['map-pins'],
+    queryFn: () => cragsApi.getMapPins(),
+    staleTime: 600000,
+  });
+
   const { data, isLoading } = useQuery({
     queryKey: ['crags-search', query, lat, lng, climbingType, country, regionId],
     queryFn: () =>
@@ -157,6 +163,7 @@ export default function CragsPage() {
       <div className="h-[360px]">
         <CragMap
           crags={crags}
+          allCrags={mapPinsData ?? []}
           userLat={lat}
           userLng={lng}
           selectedCragId={selected?.id}

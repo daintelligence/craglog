@@ -95,6 +95,8 @@ export const cragsApi = {
   getById: (id: string) => api.get(`/crags/${id}`).then((r) => r.data),
   getButtresses: (id: string) => api.get(`/crags/${id}/buttresses`).then((r) => r.data),
   getRegions: () => api.get('/crags/regions').then((r) => r.data),
+  getMapPins: (): Promise<{ id: string; name: string; latitude: number; longitude: number; rockType: string; regionName: string }[]> =>
+    api.get('/crags/map').then((r) => r.data),
   getConditions: (id: string) => api.get(`/crags/${id}/conditions`).then((r) => r.data),
   nearby: (lat: number, lng: number, radiusKm = 30) =>
     api.get('/crags/nearby', { params: { lat, lng, radiusKm } }).then((r) => r.data),

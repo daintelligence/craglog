@@ -179,6 +179,24 @@ export class CragsService {
     };
   }
 
+  async getMapCrags(): Promise<any[]> {
+    const raw = await this.dataSource.query(
+      `SELECT c.id, c.name, c.latitude::float, c.longitude::float, c.rock_type, r.name as region_name
+       FROM crags c
+       LEFT JOIN regions r ON r.id = c.region_id
+       WHERE c.is_active = true AND c.latitude IS NOT NULL AND c.longitude IS NOT NULL
+       ORDER BY c.name ASC`,
+    );
+    return raw.map((r: any) => ({
+      id: r.id,
+      name: r.name,
+      latitude: r.latitude,
+      longitude: r.longitude,
+      rockType: r.rock_type,
+      regionName: r.region_name,
+    }));
+  }
+
   async findNearby(lat: number, lng: number, radiusKm = 30): Promise<any[]> {
     const radiusMetres = radiusKm * 1000;
     const raw = await this.dataSource.query(

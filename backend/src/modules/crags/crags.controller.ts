@@ -39,6 +39,13 @@ export class CragsController {
     return this.cragsService.findNearby(lat, lng, radiusKm ? Number(radiusKm) : 30);
   }
 
+  @Get('map')
+  @Public()
+  @ApiOperation({ summary: 'All crags as lightweight map pins (id, name, lat, lng, rockType)' })
+  getMapCrags() {
+    return this.cragsService.getMapCrags();
+  }
+
   @Get(':id')
   @Public()
   @ApiOperation({ summary: 'Get crag with buttresses and routes' })

@@ -6,8 +6,21 @@ import type { Crag } from '@/types';
 import { cn } from '@/lib/utils';
 import { formatDistance } from '@/lib/utils';
 
+interface MapPin {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  rockType?: string;
+  regionName?: string;
+  distanceMetres?: number;
+  region?: { name: string };
+  description?: string;
+}
+
 interface Props {
-  crags: Crag[];
+  crags: MapPin[];
+  allCrags?: MapPin[];
   userLat?: number | null;
   userLng?: number | null;
   selectedCragId?: string | null;
@@ -15,18 +28,17 @@ interface Props {
   height?: string;
 }
 
-// ─── Simple grid-based clustering ────────────────────────────────────────────
+// ─── Grid-based clustering ────────────────────────────────────────────────────
 
 interface Cluster {
   lat: number;
   lng: number;
-  crags: Crag[];
+  crags: MapPin[];
 }
 
-function clusterCrags(crags: Crag[], zoom: number): Cluster[] {
-  const gridSize = zoom >= 10 ? 0 : zoom >= 8 ? 0.5 : zoom >= 6 ? 1.5 : 3;
+function clusterCrags(crags: MapPin[], zoom: number): Cluster[] {
+  const gridSize = zoom >= 11 ? 0 : zoom >= 9 ? 0.25 : zoom >= 7 ? 0.8 : zoom >= 5 ? 2 : 4;
 
-  // Parse coordinates — TypeORM returns decimal columns as strings
   const valid = crags
     .map((c) => ({ ...c, latitude: Number(c.latitude), longitude: Number(c.longitude) }))
     .filter((c) => isFinite(c.latitude) && isFinite(c.longitude));
@@ -38,25 +50,37 @@ function clusterCrags(crags: Crag[], zoom: number): Cluster[] {
   const grid = new Map<string, Cluster>();
   valid.forEach((c) => {
     const key = `${Math.round(c.latitude / gridSize)},${Math.round(c.longitude / gridSize)}`;
-    if (!grid.has(key)) {
-      grid.set(key, { lat: c.latitude, lng: c.longitude, crags: [] });
-    }
-    const cluster = grid.get(key)!;
-    cluster.crags.push(c);
-    cluster.lat = cluster.crags.reduce((s, x) => s + Number(x.latitude), 0) / cluster.crags.length;
-    cluster.lng = cluster.crags.reduce((s, x) => s + Number(x.longitude), 0) / cluster.crags.length;
+    if (!grid.has(key)) grid.set(key, { lat: c.latitude, lng: c.longitude, crags: [] });
+    const cl = grid.get(key)!;
+    cl.crags.push(c);
+    cl.lat = cl.crags.reduce((s, x) => s + Number(x.latitude), 0) / cl.crags.length;
+    cl.lng = cl.crags.reduce((s, x) => s + Number(x.longitude), 0) / cl.crags.length;
   });
   return Array.from(grid.values());
 }
 
-// ─── Crag detail panel ────────────────────────────────────────────────────────
+function clusterRadius(count: number): number {
+  if (count >= 50) return 36;
+  if (count >= 20) return 31;
+  if (count >= 8)  return 27;
+  if (count >= 3)  return 23;
+  return 20;
+}
 
-function CragDetailPanel({ crag, onClose }: { crag: Crag; onClose: () => void }) {
+function clusterColor(count: number): string {
+  if (count >= 50) return '#4a2e14';
+  if (count >= 20) return '#6b3e1e';
+  if (count >= 8)  return '#8c5530';
+  return '#a66c42';
+}
+
+// ─── Crag detail bottom sheet ─────────────────────────────────────────────────
+
+function CragDetailPanel({ crag, onClose }: { crag: MapPin; onClose: () => void }) {
   return (
     <div className="absolute bottom-0 left-0 right-0 z-[1000] animate-slide-up">
       <div className="bg-white dark:bg-stone-900 rounded-t-3xl p-5 shadow-2xl border-t border-stone-100 dark:border-stone-800 max-w-2xl mx-auto">
         <div className="w-10 h-1 bg-stone-200 dark:bg-stone-700 rounded-full mx-auto mb-4" />
-
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-2xl bg-rock-100 dark:bg-rock-900/30 flex items-center justify-center shrink-0">
             <Mountain className="w-5 h-5 text-rock-600" />
@@ -64,9 +88,9 @@ function CragDetailPanel({ crag, onClose }: { crag: Crag; onClose: () => void })
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-stone-900 dark:text-stone-50 text-base leading-tight">{crag.name}</h3>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
-              {crag.region?.name && (
+              {(crag.regionName || crag.region?.name) && (
                 <span className="text-xs text-stone-400 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />{crag.region.name}
+                  <MapPin className="w-3 h-3" />{crag.regionName ?? crag.region?.name}
                 </span>
               )}
               {crag.rockType && (
@@ -86,25 +110,13 @@ function CragDetailPanel({ crag, onClose }: { crag: Crag; onClose: () => void })
               </p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-stone-100 dark:bg-stone-800 shrink-0"
-          >
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-stone-100 dark:bg-stone-800 shrink-0">
             <X className="w-4 h-4 text-stone-500" />
           </button>
         </div>
-
         <div className="grid grid-cols-2 gap-3 mt-4">
-          <Link
-            href={`/log?cragId=${crag.id}`}
-            className="btn-primary py-3 text-sm"
-          >
-            Log here
-          </Link>
-          <Link
-            href={`/crags/${crag.id}`}
-            className="btn-secondary py-3 text-sm flex items-center justify-center gap-1.5"
-          >
+          <Link href={`/log?cragId=${crag.id}`} className="btn-primary py-3 text-sm">Log here</Link>
+          <Link href={`/crags/${crag.id}`} className="btn-secondary py-3 text-sm flex items-center justify-center gap-1.5">
             View crag <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
@@ -113,63 +125,21 @@ function CragDetailPanel({ crag, onClose }: { crag: Crag; onClose: () => void })
   );
 }
 
-// ─── Cluster panel (when cluster is clicked) ──────────────────────────────────
-
-function ClusterPanel({ cluster, onCragPick, onClose }: { cluster: Cluster; onCragPick: (c: Crag) => void; onClose: () => void }) {
-  return (
-    <div className="absolute bottom-0 left-0 right-0 z-[1000] animate-slide-up">
-      <div className="bg-white dark:bg-stone-900 rounded-t-3xl p-5 shadow-2xl border-t border-stone-100 dark:border-stone-800 max-w-2xl mx-auto max-h-[60vh] flex flex-col">
-        <div className="w-10 h-1 bg-stone-200 dark:bg-stone-700 rounded-full mx-auto mb-3" />
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-stone-900 dark:text-stone-50">{cluster.crags.length} crags here</h3>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-stone-100 dark:bg-stone-800">
-            <X className="w-4 h-4 text-stone-500" />
-          </button>
-        </div>
-        <div className="overflow-y-auto space-y-2">
-          {cluster.crags.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => onCragPick(c)}
-              className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-stone-50 dark:hover:bg-stone-800 text-left transition-colors"
-            >
-              <div className="w-8 h-8 rounded-xl bg-rock-100 dark:bg-rock-900/30 flex items-center justify-center shrink-0">
-                <Mountain className="w-4 h-4 text-rock-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-stone-900 dark:text-stone-50 truncate">{c.name}</p>
-                <p className="text-xs text-stone-400 capitalize">{c.rockType}</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-stone-300 shrink-0" />
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function CragMap({
-  crags,
-  userLat,
-  userLng,
-  selectedCragId,
-  onCragClick,
-  height = '100%',
-}: Props) {
+export default function CragMap({ crags, allCrags, userLat, userLng, selectedCragId, onCragClick, height = '100%' }: Props) {
   const containerRef     = useRef<HTMLDivElement>(null);
   const mapRef           = useRef<any>(null);
+  const leafletRef       = useRef<any>(null);
   const markersRef       = useRef<any[]>([]);
   const userMarkerRef    = useRef<any>(null);
-  const cragsRef         = useRef<Crag[]>(crags);
+  const pinsRef          = useRef<MapPin[]>([]);
   const renderMarkersRef = useRef<(() => void) | null>(null);
-  const [panel, setPanel] = useState<{ type: 'crag'; crag: Crag } | { type: 'cluster'; cluster: Cluster } | null>(null);
+  const [panel, setPanel] = useState<{ crag: MapPin } | null>(null);
 
-  const handleCragClick = useCallback((crag: Crag) => {
-    setPanel({ type: 'crag', crag });
-    onCragClick?.(crag);
+  const handleCragClick = useCallback((crag: MapPin) => {
+    setPanel({ crag });
+    onCragClick?.(crag as unknown as Crag);
   }, [onCragClick]);
 
   useEffect(() => {
@@ -177,29 +147,24 @@ export default function CragMap({
 
     const init = async () => {
       const L = (await import('leaflet')).default;
-      // @ts-ignore — no type declarations for CSS module
+      // @ts-ignore
       await import('leaflet/dist/leaflet.css');
-
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      });
+      leafletRef.current = L;
 
       if (mapRef.current) return;
 
-      const firstLat = Number(crags[0]?.latitude);
-      const firstLng = Number(crags[0]?.longitude);
+      const sourcePins = allCrags ?? crags;
+      pinsRef.current = sourcePins;
+
+      const firstLat = Number(sourcePins[0]?.latitude);
+      const firstLng = Number(sourcePins[0]?.longitude);
       const centre: [number, number] = userLat && userLng
         ? [userLat, userLng]
-        : isFinite(firstLat) && isFinite(firstLng)
-          ? [firstLat, firstLng]
-          : [54.0, -2.1]; // Centre of England/Wales
+        : isFinite(firstLat) && isFinite(firstLng) ? [firstLat, firstLng] : [54.5, -2.5];
 
       const map = L.map(containerRef.current!, {
         center: centre,
-        zoom: userLat ? 11 : 7,
+        zoom: userLat ? 11 : 6,
         zoomControl: true,
         attributionControl: true,
         tap: false,
@@ -213,51 +178,65 @@ export default function CragMap({
       mapRef.current = map;
 
       const renderMarkers = () => {
-        // Clear existing
         markersRef.current.forEach(({ layer }) => map.removeLayer(layer));
         markersRef.current = [];
 
         const zoom = map.getZoom();
-        const clusters = clusterCrags(cragsRef.current, zoom);
+        const clusters = clusterCrags(pinsRef.current, zoom);
 
         clusters.forEach((cluster) => {
           const isCluster = cluster.crags.length > 1;
+          const r = isCluster ? clusterRadius(cluster.crags.length) : 16;
+          const bg = isCluster ? clusterColor(cluster.crags.length) : '#9c6b40';
+          const size = r * 2;
 
-          const markerHtml = isCluster
+          const html = isCluster
             ? `<div style="
-                width:36px;height:36px;background:#6d5035;border-radius:50%;
-                border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.35);
+                width:${size}px;height:${size}px;
+                background:${bg};
+                border-radius:50%;
+                border:3px solid rgba(255,255,255,0.9);
+                box-shadow:0 3px 10px rgba(0,0,0,0.4),0 0 0 2px ${bg}55;
                 display:flex;align-items:center;justify-content:center;
-                color:white;font-size:12px;font-weight:700;
+                color:white;font-size:${cluster.crags.length >= 100 ? 11 : 13}px;font-weight:700;
+                letter-spacing:-0.5px;
+                cursor:pointer;
               ">${cluster.crags.length}</div>`
             : `<div style="
-                width:24px;height:24px;background:#856440;
-                border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-                border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);
+                width:${size}px;height:${size}px;
+                background:${bg};
+                border-radius:50%;
+                border:2.5px solid rgba(255,255,255,0.9);
+                box-shadow:0 2px 8px rgba(0,0,0,0.35);
+                cursor:pointer;
               "></div>`;
 
           const icon = L.divIcon({
             className: '',
-            html: markerHtml,
-            iconSize: isCluster ? [36, 36] : [24, 24],
-            iconAnchor: isCluster ? [18, 18] : [12, 24],
+            html,
+            iconSize: [size, size],
+            iconAnchor: [r, r],
           });
 
           const marker = L.marker([cluster.lat, cluster.lng], { icon }).addTo(map);
 
           if (!isCluster) {
-            marker.bindTooltip(cluster.crags[0].name, { permanent: false, direction: 'top', offset: [0, -26] });
+            marker.bindTooltip(cluster.crags[0].name, { permanent: false, direction: 'top', offset: [0, -(r + 4)] });
           }
 
           marker.on('click', () => {
             if (isCluster) {
-              setPanel({ type: 'cluster', cluster });
+              // Zoom into the cluster's bounding box
+              const bounds = L.latLngBounds(
+                cluster.crags.map((c) => L.latLng(Number(c.latitude), Number(c.longitude))),
+              );
+              map.fitBounds(bounds, { padding: [60, 60], maxZoom: 13, animate: true });
             } else {
               handleCragClick(cluster.crags[0]);
             }
           });
 
-          markersRef.current.push({ id: cluster.crags.map((c) => c.id).join(','), layer: marker });
+          markersRef.current.push({ layer: marker });
         });
       };
 
@@ -265,17 +244,15 @@ export default function CragMap({
       renderMarkers();
       map.on('zoomend', renderMarkers);
 
-      // User location
       if (userLat && userLng) {
         const userIcon = L.divIcon({
           className: '',
-          html: `<div style="width:14px;height:14px;background:#3b82f6;border-radius:50%;border:2.5px solid white;box-shadow:0 0 0 4px rgba(59,130,246,0.25)"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7],
+          html: `<div style="width:14px;height:14px;background:#3b82f6;border-radius:50%;border:2.5px solid white;box-shadow:0 0 0 5px rgba(59,130,246,0.2)"></div>`,
+          iconSize: [14, 14], iconAnchor: [7, 7],
         });
         userMarkerRef.current = L.marker([userLat, userLng], { icon: userIcon })
           .addTo(map)
-          .bindTooltip('You are here', { permanent: false, direction: 'top' });
+          .bindTooltip('You', { permanent: false, direction: 'top' });
       }
     };
 
@@ -290,36 +267,28 @@ export default function CragMap({
     };
   }, []);
 
-  // Re-render markers whenever crags prop changes
+  // Re-render when allCrags or crags change
   useEffect(() => {
-    cragsRef.current = crags;
+    pinsRef.current = allCrags ?? crags;
     renderMarkersRef.current?.();
-  }, [crags]);
+  }, [crags, allCrags]);
 
   // Pan to selected crag
   useEffect(() => {
     if (!mapRef.current || !selectedCragId) return;
-    const crag = crags.find((c) => c.id === selectedCragId);
-    const lat = Number(crag?.latitude);
-    const lng = Number(crag?.longitude);
+    const pin = pinsRef.current.find((c) => c.id === selectedCragId);
+    const lat = Number(pin?.latitude);
+    const lng = Number(pin?.longitude);
     if (isFinite(lat) && isFinite(lng)) {
-      mapRef.current.panTo([lat, lng], { animate: true });
+      mapRef.current.setView([lat, lng], Math.max(mapRef.current.getZoom(), 13), { animate: true });
     }
-  }, [selectedCragId, crags]);
+  }, [selectedCragId]);
 
   return (
     <div className="relative w-full rounded-2xl overflow-hidden border border-stone-100 dark:border-stone-800" style={{ height }}>
       <div ref={containerRef} className="w-full h-full" />
-
-      {panel?.type === 'crag' && (
+      {panel && (
         <CragDetailPanel crag={panel.crag} onClose={() => setPanel(null)} />
-      )}
-      {panel?.type === 'cluster' && (
-        <ClusterPanel
-          cluster={panel.cluster}
-          onCragPick={(crag) => setPanel({ type: 'crag', crag })}
-          onClose={() => setPanel(null)}
-        />
       )}
     </div>
   );
