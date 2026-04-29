@@ -9,8 +9,8 @@ import { formatDistance } from '@/lib/utils';
 interface MapPin {
   id: string;
   name: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   rockType?: string;
   regionName?: string;
   distanceMetres?: number;
