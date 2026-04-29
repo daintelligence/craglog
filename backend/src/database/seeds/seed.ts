@@ -47,6 +47,16 @@ import { seedDorsetSwanageMore } from './dorset-swanage-more.seed';
 import { seedSouthWalesLimestone } from './south-wales-limestone.seed';
 import { seedCornwallNorthCoast } from './cornwall-north-coast.seed';
 import { seedGowerMore } from './gower-more.seed';
+import { seedBenNevisCrags } from './ben-nevis-crags.seed';
+import { seedGlencoe } from './glencoe.seed';
+import { seedCairngormsCrags } from './cairngorms-crags.seed';
+import { seedCreagDubhSkyeExtras } from './creag-dubh-skye-extras.seed';
+import { seedDinasCromlechCloggy } from './dinas-cromlech-cloggy.seed';
+import { seedGreatOrmeSport } from './great-orme-sport.seed';
+import { seedYorkshireGritClassics } from './yorkshire-grit-classics.seed';
+import { seedGordaleMoreYorkshire } from './gordale-more-yorkshire.seed';
+import { seedBosigramPenwith } from './bosigran-penwith.seed';
+import { seedDartmoorDevon } from './dartmoor-devon.seed';
 import { seedDemoAscents } from './demo-ascents.seed';
 import { patchRegionCountries } from './seed-helpers';
 import * as bcrypt from 'bcryptjs';
@@ -164,6 +174,17 @@ async function seed() {
   await seedSouthWalesLimestone(ds);
   await seedCornwallNorthCoast(ds);
   await seedGowerMore(ds);
+
+  await seedBenNevisCrags(ds);
+  await seedGlencoe(ds);
+  await seedCairngormsCrags(ds);
+  await seedCreagDubhSkyeExtras(ds);
+  await seedDinasCromlechCloggy(ds);
+  await seedGreatOrmeSport(ds);
+  await seedYorkshireGritClassics(ds);
+  await seedGordaleMoreYorkshire(ds);
+  await seedBosigramPenwith(ds);
+  await seedDartmoorDevon(ds);
 
   // Patch region countries (UK → England/Wales/Scotland)
   const regionRepo = ds.getRepository(Region);
