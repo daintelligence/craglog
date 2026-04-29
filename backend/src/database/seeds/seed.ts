@@ -57,6 +57,15 @@ import { seedYorkshireGritClassics } from './yorkshire-grit-classics.seed';
 import { seedGordaleMoreYorkshire } from './gordale-more-yorkshire.seed';
 import { seedBosigramPenwith } from './bosigran-penwith.seed';
 import { seedDartmoorDevon } from './dartmoor-devon.seed';
+import { seedPortland } from './portland.seed';
+import { seedMalhamExpanded } from './malham-expanded.seed';
+import { seedOgwenValley } from './ogwen-valley.seed';
+import { seedNorthWalesSlate } from './north-wales-slate.seed';
+import { seedHighTorPeakMore } from './high-tor-peak-more.seed';
+import { seedTorridon } from './torridon.seed';
+import { seedIlkleyWharfedale } from './ilkley-wharfedale.seed';
+import { seedWyeValleyShropshire } from './wye-valley-shropshire.seed';
+import { seedIsleOfMan } from './isle-of-man.seed';
 import { seedDemoAscents } from './demo-ascents.seed';
 import { patchRegionCountries } from './seed-helpers';
 import * as bcrypt from 'bcryptjs';
@@ -185,6 +194,16 @@ async function seed() {
   await seedGordaleMoreYorkshire(ds);
   await seedBosigramPenwith(ds);
   await seedDartmoorDevon(ds);
+
+  await seedPortland(ds);
+  await seedMalhamExpanded(ds);
+  await seedOgwenValley(ds);
+  await seedNorthWalesSlate(ds);
+  await seedHighTorPeakMore(ds);
+  await seedTorridon(ds);
+  await seedIlkleyWharfedale(ds);
+  await seedWyeValleyShropshire(ds);
+  await seedIsleOfMan(ds);
 
   // Patch region countries (UK → England/Wales/Scotland)
   const regionRepo = ds.getRepository(Region);
