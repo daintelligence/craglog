@@ -37,6 +37,16 @@ import { seedScotlandMore } from './scotland-more.seed';
 import { seedNorthernIreland } from './northern-ireland.seed';
 import { seedNorthWalesMore } from './north-wales-more.seed';
 import { seedPembrokeMore } from './pembroke-more.seed';
+import { seedYorkshireLimestone } from './yorkshire-limestone.seed';
+import { seedPeakSouthGritstone } from './peak-south-gritstone.seed';
+import { seedPeakLimestoneMore } from './peak-limestone-more.seed';
+import { seedLakeDistrictHighCrags } from './lake-district-high-crags.seed';
+import { seedScotlandSkyeArran } from './scotland-skye-arran.seed';
+import { seedScotlandEast } from './scotland-east.seed';
+import { seedDorsetSwanageMore } from './dorset-swanage-more.seed';
+import { seedSouthWalesLimestone } from './south-wales-limestone.seed';
+import { seedCornwallNorthCoast } from './cornwall-north-coast.seed';
+import { seedGowerMore } from './gower-more.seed';
 import { seedDemoAscents } from './demo-ascents.seed';
 import { patchRegionCountries } from './seed-helpers';
 import * as bcrypt from 'bcryptjs';
@@ -143,6 +153,17 @@ async function seed() {
 
   await seedPembrokeMore(ds);
   console.log("  ✓ Pembroke more seeded (Huntsman's Leap, Stennis Head, Stackpole extended, St Bride's Haven, Elegug Stacks)");
+
+  await seedYorkshireLimestone(ds);
+  await seedPeakSouthGritstone(ds);
+  await seedPeakLimestoneMore(ds);
+  await seedLakeDistrictHighCrags(ds);
+  await seedScotlandSkyeArran(ds);
+  await seedScotlandEast(ds);
+  await seedDorsetSwanageMore(ds);
+  await seedSouthWalesLimestone(ds);
+  await seedCornwallNorthCoast(ds);
+  await seedGowerMore(ds);
 
   // Patch region countries (UK → England/Wales/Scotland)
   const regionRepo = ds.getRepository(Region);
