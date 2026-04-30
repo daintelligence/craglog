@@ -6,16 +6,15 @@ import { formatDate } from '@/lib/utils';
 import { getStoredUser } from '@/lib/auth';
 import { GradeChip } from '@/components/GradeChip';
 import { SkeletonStats } from '@/components/Skeleton';
-import { ASCENT_TYPE_LABELS, BADGE_TIER_COLORS } from '@/types';
-import type { BadgeTier } from '@/types';
+import { ASCENT_TYPE_LABELS } from '@/types';
 import { cn } from '@/lib/utils';
 import {
-  PlusCircle, TrendingUp, Mountain, Target, Calendar,
+  PlusCircle, TrendingUp, Mountain, Calendar,
   ChevronRight, Flame, Award, MapPin, Navigation,
 } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
 // ── Activity heatmap ──────────────────────────────────────────────────────────
@@ -289,6 +288,37 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* ── Recent badges ─────────────────────────────────────────────── */}
+      {recentBadges.length > 0 && (
+        <div className="card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Award className="w-4 h-4 text-amber-500" />
+              <h2 className="font-bold text-stone-900 dark:text-stone-100 text-sm">Recent badges</h2>
+            </div>
+            <Link href="/badges" className="text-xs text-rock-600 dark:text-rock-400 font-semibold flex items-center gap-0.5">
+              All <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-none">
+            {recentBadges.map(({ badge }: any) => (
+              <div key={badge.id} className="flex flex-col items-center gap-1.5 shrink-0 w-16">
+                <div className={cn(
+                  'w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-md ring-2',
+                  badge.tier === 'gold'   && 'bg-gradient-to-br from-amber-300 to-amber-500 ring-amber-300',
+                  badge.tier === 'silver' && 'bg-gradient-to-br from-stone-300 to-stone-400 ring-stone-300',
+                  badge.tier === 'bronze' && 'bg-gradient-to-br from-orange-300 to-orange-500 ring-orange-300',
+                  !badge.tier && 'bg-gradient-to-br from-rock-400 to-rock-600 ring-rock-300',
+                )}>
+                  {badge.icon || '🏅'}
+                </div>
+                <span className="text-[10px] text-center text-stone-600 dark:text-stone-400 font-semibold leading-tight">{badge.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Quick stats strip ─────────────────────────────────────────── */}
       <div className="grid grid-cols-4 gap-2.5">
         {[
@@ -399,27 +429,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── Recent badges ─────────────────────────────────────────────── */}
-      {recentBadges.length > 0 && (
-        <div className="card p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-stone-900 dark:text-stone-100 text-sm">Badges</h2>
-            <Link href="/profile?tab=badges" className="text-xs text-rock-600 dark:text-rock-400 font-semibold flex items-center gap-0.5">
-              All <ChevronRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="flex gap-3">
-            {recentBadges.map(({ badge, earnedAt }: any) => (
-              <div key={badge.id} className="flex flex-col items-center gap-1 w-16">
-                <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm', `badge-${badge.tier}`)}>
-                  {badge.icon || '🏅'}
-                </div>
-                <span className="text-[9px] text-center text-stone-500 dark:text-stone-400 font-medium leading-tight">{badge.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* ── Empty state ───────────────────────────────────────────────── */}
       {!statsLoading && (totals?.totalAscents ?? 0) === 0 && (

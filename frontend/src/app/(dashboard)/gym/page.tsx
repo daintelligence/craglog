@@ -1,10 +1,10 @@
 'use client';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ascentsApi } from '@/lib/api';
+import { ascentsApi, badgesApi } from '@/lib/api';
 import { today } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, ChevronUp, ChevronDown, Dumbbell, Trash2 } from 'lucide-react';
+import { CheckCircle2, ChevronUp, ChevronDown, Dumbbell, Trash2, Award } from 'lucide-react';
 
 // ── grades ────────────────────────────────────────────────────────────────────
 
@@ -12,12 +12,13 @@ const FRENCH = ['4','4+','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7
 const VGRADES = ['VB','V0','V0+','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13'];
 
 type Style = 'lead' | 'toprope' | 'autobelay' | 'boulder';
+type GradeSystem = 'rope' | 'boulder';
 
-const STYLES: { value: Style; label: string; short: string; colour: string }[] = [
-  { value: 'lead',      label: 'Lead',      short: 'Lead', colour: 'bg-rock-600 active:bg-rock-700 shadow-rock-200 dark:shadow-rock-900' },
-  { value: 'toprope',   label: 'Top rope',  short: 'Top',  colour: 'bg-summit-600 active:bg-summit-700 shadow-summit-200 dark:shadow-summit-900' },
-  { value: 'autobelay', label: 'Autobelay', short: 'Auto', colour: 'bg-sky-600 active:bg-sky-700 shadow-sky-200 dark:shadow-sky-900' },
-  { value: 'boulder',   label: 'Boulder',   short: 'Bldr', colour: 'bg-amber-600 active:bg-amber-700 shadow-amber-200 dark:shadow-amber-900' },
+const STYLES: { value: Style; label: string; short: string; colour: string; system: GradeSystem }[] = [
+  { value: 'lead',      label: 'Lead',      short: 'Lead', colour: 'bg-rock-600 active:bg-rock-700 shadow-rock-200 dark:shadow-rock-900',       system: 'rope'    },
+  { value: 'toprope',   label: 'Top rope',  short: 'Top',  colour: 'bg-summit-600 active:bg-summit-700 shadow-summit-200 dark:shadow-summit-900', system: 'rope'    },
+  { value: 'autobelay', label: 'Autobelay', short: 'Auto', colour: 'bg-sky-600 active:bg-sky-700 shadow-sky-200 dark:shadow-sky-900',             system: 'rope'    },
+  { value: 'boulder',   label: 'Boulder',   short: 'Bldr', colour: 'bg-amber-600 active:bg-amber-700 shadow-amber-200 dark:shadow-amber-900',     system: 'boulder' },
 ];
 
 // ── drum picker ───────────────────────────────────────────────────────────────
@@ -37,7 +38,6 @@ function GradeDrum({ grades, value, onChange }: {
     listRef.current?.scrollTo({ top: i * ITEM_H, behavior: smooth ? 'smooth' : 'instant' });
   }, []);
 
-  // Jump to matching grade or sensible default when grade list changes
   useEffect(() => {
     if (prevKey.current === grades[0]) return;
     prevKey.current = grades[0];
@@ -112,22 +112,52 @@ function GradeDrum({ grades, value, onChange }: {
   );
 }
 
+// ── badge toast ───────────────────────────────────────────────────────────────
+
+const BADGE_ICONS: Record<string, string> = {
+  mountain: '⛰️', trophy: '🏆', gear: '⚙️', bolt: '⚡', eye: '👁️',
+  map: '🗺️', star: '⭐', flame: '🔥', layers: '📚', shuffle: '🔀',
+  zap: '⚡', 'map-pin': '📍', list: '📋', default: '🏅',
+};
+
+function BadgeToast({ badge, onDone }: { badge: any; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 4000);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[2000] animate-slide-up">
+      <div className="bg-stone-900 dark:bg-stone-800 text-white rounded-2xl px-5 py-3.5 shadow-2xl flex items-center gap-3 min-w-[220px]">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-xl shrink-0">
+          {BADGE_ICONS[badge.icon] || BADGE_ICONS.default}
+        </div>
+        <div>
+          <p className="text-xs text-stone-400 font-medium">Badge unlocked!</p>
+          <p className="font-bold text-sm leading-tight">{badge.name}</p>
+        </div>
+        <Award className="w-4 h-4 text-amber-400 shrink-0" />
+      </div>
+    </div>
+  );
+}
+
 // ── main ──────────────────────────────────────────────────────────────────────
 
 export default function GymPage() {
   const qc = useQueryClient();
 
-  // Grade state — separate for rope vs boulder so switching back remembers
   const [ropeGrade,    setRopeGrade]    = useState('6b');
   const [boulderGrade, setBoulderGrade] = useState('V3');
   const [activeStyle,  setActiveStyle]  = useState<Style>('lead');
+  const [gradeSystem,  setGradeSystem]  = useState<GradeSystem>('rope');
   const [flash,        setFlash]        = useState<Style | null>(null);
   const [busy,         setBusy]         = useState(false);
+  const [toastBadge,   setToastBadge]   = useState<any | null>(null);
 
-  const isBoulder = activeStyle === 'boulder';
-  const grades    = isBoulder ? VGRADES : FRENCH;
-  const grade     = isBoulder ? boulderGrade : ropeGrade;
-  const setGrade  = isBoulder ? setBoulderGrade : setRopeGrade;
+  const grades   = gradeSystem === 'boulder' ? VGRADES : FRENCH;
+  const grade    = gradeSystem === 'boulder' ? boulderGrade : ropeGrade;
+  const setGrade = gradeSystem === 'boulder' ? setBoulderGrade : setRopeGrade;
 
   const todayStr = today();
   const { data: raw = [] } = useQuery({
@@ -138,19 +168,68 @@ export default function GymPage() {
   const todayAscents = raw as any[];
   const sessionCount = todayAscents.length;
 
+  // Badge detection
+  const prevBadgeCountRef = useRef<number | null>(null);
+  const { data: earnedBadges = [] } = useQuery({
+    queryKey: ['badges', 'mine'],
+    queryFn: badgesApi.mine,
+    refetchInterval: 8000,
+  });
+  useEffect(() => {
+    if (prevBadgeCountRef.current === null) {
+      prevBadgeCountRef.current = earnedBadges.length;
+      return;
+    }
+    if (earnedBadges.length > prevBadgeCountRef.current) {
+      const newBadge = earnedBadges[earnedBadges.length - 1];
+      setToastBadge(newBadge?.badge ?? newBadge);
+    }
+    prevBadgeCountRef.current = earnedBadges.length;
+  }, [earnedBadges]);
+
+  // Quick-grade chips — most-logged grades this session
+  const quickGrades = useMemo(() => {
+    const counts: Record<string, number> = {};
+    todayAscents.forEach((a: any) => {
+      if (a.freeGrade) counts[a.freeGrade] = (counts[a.freeGrade] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([g]) => g)
+      .filter((g) => grades.includes(g));
+  }, [todayAscents, grades]);
+
+  // Swipe to switch grade system
+  const swipeOrigin = useRef<{ x: number; y: number } | null>(null);
+  function onTouchStart(e: React.TouchEvent) {
+    swipeOrigin.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (!swipeOrigin.current) return;
+    const dx = e.changedTouches[0].clientX - swipeOrigin.current.x;
+    const dy = Math.abs(e.changedTouches[0].clientY - swipeOrigin.current.y);
+    swipeOrigin.current = null;
+    if (Math.abs(dx) < 50 || dy > Math.abs(dx)) return;
+    setGradeSystem(dx < 0 ? 'boulder' : 'rope');
+  }
+
   async function log(style: Style) {
     if (busy) return;
+    const newSystem = STYLES.find((s) => s.value === style)!.system;
     setActiveStyle(style);
-    // Switching grade system — just update selection, don't log
-    if ((style === 'boulder') !== isBoulder) return;
+    setGradeSystem(newSystem);
+    if (newSystem !== gradeSystem) return; // just switched system, don't log
 
     setBusy(true);
     setFlash(style);
+    const logGrade = newSystem === 'boulder' ? boulderGrade : ropeGrade;
     try {
-      await ascentsApi.gymLog({ grade, style, date: todayStr });
+      await ascentsApi.gymLog({ grade: logGrade, style, date: todayStr });
       qc.invalidateQueries({ queryKey: ['ascents-gym-today'] });
       qc.invalidateQueries({ queryKey: ['ascents'] });
       qc.invalidateQueries({ queryKey: ['stats'] });
+      qc.invalidateQueries({ queryKey: ['badges', 'mine'] });
     } finally {
       setTimeout(() => { setFlash(null); setBusy(false); }, 600);
     }
@@ -188,12 +267,56 @@ export default function GymPage() {
             </span>
           </div>
         ) : (
-          <p className="text-sm text-stone-400">Scroll to your grade, tap a style to log</p>
+          <p className="text-sm text-stone-400">Scroll grade · swipe for V · tap style to log</p>
         )}
       </div>
 
-      {/* Grade drum */}
-      <GradeDrum grades={grades} value={grade} onChange={setGrade} />
+      {/* Grade system toggle + drum */}
+      <div
+        className="flex flex-col items-center gap-3"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* Rope / Boulder pill */}
+        <div className="flex bg-stone-100 dark:bg-stone-800 rounded-full p-1 gap-1">
+          {(['rope', 'boulder'] as const).map((sys) => (
+            <button
+              key={sys}
+              onClick={() => setGradeSystem(sys)}
+              className={cn(
+                'px-5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200',
+                gradeSystem === sys
+                  ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-stone-50 shadow-sm'
+                  : 'text-stone-400 dark:text-stone-500',
+              )}
+            >
+              {sys === 'rope' ? 'French' : 'V grade'}
+            </button>
+          ))}
+        </div>
+
+        <GradeDrum grades={grades} value={grade} onChange={setGrade} />
+
+        {/* Quick-grade chips */}
+        {quickGrades.length > 0 && (
+          <div className="flex gap-2 flex-wrap justify-center">
+            {quickGrades.map((g) => (
+              <button
+                key={g}
+                onClick={() => setGrade(g)}
+                className={cn(
+                  'px-3 py-1 rounded-full text-sm font-bold border-2 transition-all',
+                  grade === g
+                    ? 'border-rock-500 bg-rock-50 dark:bg-rock-900/30 text-rock-600 dark:text-rock-400'
+                    : 'border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400',
+                )}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Style buttons — 2×2 grid */}
       <div className="w-full grid grid-cols-2 gap-3 px-1">
@@ -216,7 +339,6 @@ export default function GymPage() {
                 <span className="text-xs font-medium opacity-80">{s.label}</span>
               </button>
 
-              {/* Success flash overlay */}
               <div className={cn(
                 'absolute inset-0 rounded-2xl flex items-center justify-center',
                 'bg-emerald-500 transition-all duration-300',
@@ -250,6 +372,11 @@ export default function GymPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Badge unlock toast */}
+      {toastBadge && (
+        <BadgeToast badge={toastBadge} onDone={() => setToastBadge(null)} />
       )}
     </div>
   );
