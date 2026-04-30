@@ -66,6 +66,16 @@ import { seedTorridon } from './torridon.seed';
 import { seedIlkleyWharfedale } from './ilkley-wharfedale.seed';
 import { seedWyeValleyShropshire } from './wye-valley-shropshire.seed';
 import { seedIsleOfMan } from './isle-of-man.seed';
+import { seedTremadog } from './tremadog.seed';
+import { seedFroggattCurbar } from './froggatt-curbar.seed';
+import { seedScafellGimmer } from './scafell-gimmer.seed';
+import { seedGogarth } from './gogarth-anglesey.seed';
+import { seedKilnseySport } from './kilnsey-sport.seed';
+import { seedDumbartonClyde } from './dumbarton-clyde.seed';
+import { seedLancashireGrit } from './lancashire-grit.seed';
+import { seedDunkeldPerthshire } from './dunkeld-perthshire.seed';
+import { seedEastMidlands as seedEastMidlandsCrags } from './east-midlands-crags.seed';
+import { seedCornwallSouthCoast } from './cornwall-south-coast.seed';
 import { seedDemoAscents } from './demo-ascents.seed';
 import { patchRegionCountries } from './seed-helpers';
 import * as bcrypt from 'bcryptjs';
@@ -204,6 +214,18 @@ async function seed() {
   await seedIlkleyWharfedale(ds);
   await seedWyeValleyShropshire(ds);
   await seedIsleOfMan(ds);
+
+  await seedTremadog(ds);
+  await seedFroggattCurbar(ds);
+  await seedScafellGimmer(ds);
+  await seedGogarth(ds);
+  await seedKilnseySport(ds);
+
+  await seedDumbartonClyde(ds);
+  await seedLancashireGrit(ds);
+  await seedDunkeldPerthshire(ds);
+  await seedEastMidlandsCrags(ds);
+  await seedCornwallSouthCoast(ds);
 
   // Patch region countries (UK → England/Wales/Scotland)
   const regionRepo = ds.getRepository(Region);
