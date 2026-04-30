@@ -163,7 +163,7 @@ export default function CragsPage() {
       <div className="h-[360px]">
         <CragMap
           crags={crags}
-          allCrags={mapPinsData ?? []}
+          allCrags={mapPinsData}
           userLat={lat}
           userLng={lng}
           selectedCragId={selected?.id}

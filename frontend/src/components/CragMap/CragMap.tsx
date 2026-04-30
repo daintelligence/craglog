@@ -3,10 +3,9 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Mountain, X, ChevronRight, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import type { Crag } from '@/types';
-import { cn } from '@/lib/utils';
 import { formatDistance } from '@/lib/utils';
 
-interface MapPin {
+export interface MapPin {
   id: string;
   name: string;
   latitude?: number | string | null;
@@ -26,52 +25,6 @@ interface Props {
   selectedCragId?: string | null;
   onCragClick?: (crag: Crag) => void;
   height?: string;
-}
-
-// ─── Grid-based clustering ────────────────────────────────────────────────────
-
-interface Cluster {
-  lat: number;
-  lng: number;
-  crags: MapPin[];
-}
-
-function clusterCrags(crags: MapPin[], zoom: number): Cluster[] {
-  const gridSize = zoom >= 11 ? 0 : zoom >= 9 ? 0.25 : zoom >= 7 ? 0.8 : zoom >= 5 ? 2 : 4;
-
-  const valid = crags
-    .map((c) => ({ ...c, latitude: Number(c.latitude), longitude: Number(c.longitude) }))
-    .filter((c) => isFinite(c.latitude) && isFinite(c.longitude));
-
-  if (gridSize === 0) {
-    return valid.map((c) => ({ lat: c.latitude, lng: c.longitude, crags: [c] }));
-  }
-
-  const grid = new Map<string, Cluster>();
-  valid.forEach((c) => {
-    const key = `${Math.round(c.latitude / gridSize)},${Math.round(c.longitude / gridSize)}`;
-    if (!grid.has(key)) grid.set(key, { lat: c.latitude, lng: c.longitude, crags: [] });
-    const cl = grid.get(key)!;
-    cl.crags.push(c);
-    cl.lat = cl.crags.reduce((s, x) => s + Number(x.latitude), 0) / cl.crags.length;
-    cl.lng = cl.crags.reduce((s, x) => s + Number(x.longitude), 0) / cl.crags.length;
-  });
-  return Array.from(grid.values());
-}
-
-function clusterRadius(count: number): number {
-  if (count >= 50) return 36;
-  if (count >= 20) return 31;
-  if (count >= 8)  return 27;
-  if (count >= 3)  return 23;
-  return 20;
-}
-
-function clusterColor(count: number): string {
-  if (count >= 50) return '#4a2e14';
-  if (count >= 20) return '#6b3e1e';
-  if (count >= 8)  return '#8c5530';
-  return '#a66c42';
 }
 
 // ─── Crag detail bottom sheet ─────────────────────────────────────────────────
@@ -115,7 +68,7 @@ function CragDetailPanel({ crag, onClose }: { crag: MapPin; onClose: () => void 
           </button>
         </div>
         <div className="grid grid-cols-2 gap-3 mt-4">
-          <Link href={`/log?cragId=${crag.id}`} className="btn-primary py-3 text-sm">Log here</Link>
+          <Link href={`/log?cragId=${crag.id}`} className="btn-primary py-3 text-sm text-center">Log here</Link>
           <Link href={`/crags/${crag.id}`} className="btn-secondary py-3 text-sm flex items-center justify-center gap-1.5">
             View crag <ChevronRight className="w-4 h-4" />
           </Link>
@@ -128,39 +81,74 @@ function CragDetailPanel({ crag, onClose }: { crag: MapPin; onClose: () => void 
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function CragMap({ crags, allCrags, userLat, userLng, selectedCragId, onCragClick, height = '100%' }: Props) {
-  const containerRef     = useRef<HTMLDivElement>(null);
-  const mapRef           = useRef<any>(null);
-  const leafletRef       = useRef<any>(null);
-  const markersRef       = useRef<any[]>([]);
-  const userMarkerRef    = useRef<any>(null);
-  const pinsRef          = useRef<MapPin[]>([]);
-  const renderMarkersRef = useRef<(() => void) | null>(null);
+  const containerRef      = useRef<HTMLDivElement>(null);
+  const mapRef            = useRef<any>(null);
+  const leafletRef        = useRef<any>(null);
+  const clusterGroupRef   = useRef<any>(null);
+  const pinsRef           = useRef<MapPin[]>([]);
+  const onCragClickRef    = useRef(onCragClick);
+  onCragClickRef.current  = onCragClick;
+
   const [panel, setPanel] = useState<{ crag: MapPin } | null>(null);
 
   const handleCragClick = useCallback((crag: MapPin) => {
     setPanel({ crag });
-    onCragClick?.(crag as unknown as Crag);
-  }, [onCragClick]);
+    onCragClickRef.current?.(crag as unknown as Crag);
+  }, []);
 
+  // Rebuild all markers in the cluster group from pinsRef
+  const rebuildMarkers = useCallback(() => {
+    const L = leafletRef.current;
+    const clusterGroup = clusterGroupRef.current;
+    if (!L || !clusterGroup) return;
+
+    clusterGroup.clearLayers();
+
+    pinsRef.current.forEach((pin) => {
+      const lat = Number(pin.latitude);
+      const lng = Number(pin.longitude);
+      if (!isFinite(lat) || !isFinite(lng)) return;
+
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="
+          width:20px;height:20px;
+          background:#9c6b40;
+          border-radius:50%;
+          border:2.5px solid rgba(255,255,255,0.9);
+          box-shadow:0 2px 8px rgba(0,0,0,0.35);
+          cursor:pointer;
+        "></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      });
+
+      const marker = L.marker([lat, lng], { icon });
+      marker.bindTooltip(pin.name, { permanent: false, direction: 'top', offset: [0, -12] });
+      marker.on('click', () => handleCragClick(pin));
+      clusterGroup.addLayer(marker);
+    });
+  }, [handleCragClick]);
+
+  // Initialize map once on mount
   useEffect(() => {
     if (typeof window === 'undefined' || !containerRef.current) return;
+    let destroyed = false;
 
     const init = async () => {
       const L = (await import('leaflet')).default;
       // @ts-ignore
       await import('leaflet/dist/leaflet.css');
-      leafletRef.current = L;
+      // @ts-ignore
+      await import('leaflet.markercluster');
+      // @ts-ignore
+      await import('leaflet.markercluster/dist/MarkerCluster.css');
+      // @ts-ignore
+      await import('leaflet.markercluster/dist/MarkerCluster.Default.css');
 
-      if (mapRef.current) return;
+      if (destroyed || mapRef.current) return;
 
-      const sourcePins = allCrags ?? crags;
-      pinsRef.current = sourcePins;
-
-      const firstLat = Number(sourcePins[0]?.latitude);
-      const firstLng = Number(sourcePins[0]?.longitude);
-      const centre: [number, number] = userLat && userLng
-        ? [userLat, userLng]
-        : isFinite(firstLat) && isFinite(firstLng) ? [firstLat, firstLng] : [54.5, -2.5];
+      const centre: [number, number] = userLat && userLng ? [userLat, userLng] : [54.5, -2.5];
 
       const map = L.map(containerRef.current!, {
         center: centre,
@@ -172,85 +160,54 @@ export default function CragMap({ crags, allCrags, userLat, userLng, selectedCra
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 18,
+        maxZoom: 19,
       }).addTo(map);
 
-      mapRef.current = map;
-
-      const renderMarkers = () => {
-        markersRef.current.forEach(({ layer }) => map.removeLayer(layer));
-        markersRef.current = [];
-
-        const zoom = map.getZoom();
-        const clusters = clusterCrags(pinsRef.current, zoom);
-
-        clusters.forEach((cluster) => {
-          const isCluster = cluster.crags.length > 1;
-          const r = isCluster ? clusterRadius(cluster.crags.length) : 16;
-          const bg = isCluster ? clusterColor(cluster.crags.length) : '#9c6b40';
-          const size = r * 2;
-
-          const html = isCluster
-            ? `<div style="
-                width:${size}px;height:${size}px;
-                background:${bg};
-                border-radius:50%;
-                border:3px solid rgba(255,255,255,0.9);
-                box-shadow:0 3px 10px rgba(0,0,0,0.4),0 0 0 2px ${bg}55;
-                display:flex;align-items:center;justify-content:center;
-                color:white;font-size:${cluster.crags.length >= 100 ? 11 : 13}px;font-weight:700;
-                letter-spacing:-0.5px;
-                cursor:pointer;
-              ">${cluster.crags.length}</div>`
-            : `<div style="
-                width:${size}px;height:${size}px;
-                background:${bg};
-                border-radius:50%;
-                border:2.5px solid rgba(255,255,255,0.9);
-                box-shadow:0 2px 8px rgba(0,0,0,0.35);
-                cursor:pointer;
-              "></div>`;
-
-          const icon = L.divIcon({
+      const clusterGroup = (L as any).markerClusterGroup({
+        chunkedLoading: true,
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        iconCreateFunction: (cluster: any) => {
+          const count = cluster.getChildCount();
+          const size = count >= 100 ? 48 : count >= 50 ? 42 : count >= 20 ? 36 : count >= 8 ? 30 : 24;
+          const bg   = count >= 50 ? '#4a2e14' : count >= 20 ? '#6b3e1e' : count >= 8 ? '#8c5530' : '#a66c42';
+          const fs   = count >= 100 ? 11 : count >= 10 ? 13 : 13;
+          return L.divIcon({
+            html: `<div style="
+              width:${size}px;height:${size}px;
+              background:${bg};
+              border-radius:50%;
+              border:3px solid rgba(255,255,255,0.9);
+              box-shadow:0 3px 10px rgba(0,0,0,0.4),0 0 0 2px ${bg}55;
+              display:flex;align-items:center;justify-content:center;
+              color:white;font-size:${fs}px;font-weight:700;letter-spacing:-0.5px;
+              cursor:pointer;
+            ">${count}</div>`,
             className: '',
-            html,
             iconSize: [size, size],
-            iconAnchor: [r, r],
+            iconAnchor: [size / 2, size / 2],
           });
+        },
+      });
 
-          const marker = L.marker([cluster.lat, cluster.lng], { icon }).addTo(map);
+      map.addLayer(clusterGroup);
+      mapRef.current      = map;
+      leafletRef.current  = L;
+      clusterGroupRef.current = clusterGroup;
 
-          if (!isCluster) {
-            marker.bindTooltip(cluster.crags[0].name, { permanent: false, direction: 'top', offset: [0, -(r + 4)] });
-          }
-
-          marker.on('click', () => {
-            if (isCluster) {
-              // Zoom into the cluster's bounding box
-              const bounds = L.latLngBounds(
-                cluster.crags.map((c) => L.latLng(Number(c.latitude), Number(c.longitude))),
-              );
-              map.fitBounds(bounds, { padding: [60, 60], maxZoom: 13, animate: true });
-            } else {
-              handleCragClick(cluster.crags[0]);
-            }
-          });
-
-          markersRef.current.push({ layer: marker });
-        });
-      };
-
-      renderMarkersRef.current = renderMarkers;
-      renderMarkers();
-      map.on('zoomend', renderMarkers);
+      // Render whatever pins were loaded by the time leaflet finished
+      rebuildMarkers();
 
       if (userLat && userLng) {
         const userIcon = L.divIcon({
           className: '',
           html: `<div style="width:14px;height:14px;background:#3b82f6;border-radius:50%;border:2.5px solid white;box-shadow:0 0 0 5px rgba(59,130,246,0.2)"></div>`,
-          iconSize: [14, 14], iconAnchor: [7, 7],
+          iconSize: [14, 14],
+          iconAnchor: [7, 7],
         });
-        userMarkerRef.current = L.marker([userLat, userLng], { icon: userIcon })
+        L.marker([userLat, userLng], { icon: userIcon })
           .addTo(map)
           .bindTooltip('You', { permanent: false, direction: 'top' });
       }
@@ -259,21 +216,23 @@ export default function CragMap({ crags, allCrags, userLat, userLng, selectedCra
     init();
 
     return () => {
+      destroyed = true;
       if (mapRef.current) {
         mapRef.current.remove();
-        mapRef.current = null;
-        markersRef.current = [];
+        mapRef.current    = null;
+        clusterGroupRef.current = null;
+        leafletRef.current = null;
       }
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-render when allCrags or crags change
+  // Re-render markers whenever pins change
   useEffect(() => {
     pinsRef.current = allCrags ?? crags;
-    renderMarkersRef.current?.();
-  }, [crags, allCrags]);
+    rebuildMarkers();
+  }, [crags, allCrags, rebuildMarkers]);
 
-  // Pan to selected crag
+  // Pan/zoom to selected crag
   useEffect(() => {
     if (!mapRef.current || !selectedCragId) return;
     const pin = pinsRef.current.find((c) => c.id === selectedCragId);
