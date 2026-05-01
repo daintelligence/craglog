@@ -75,14 +75,16 @@ function GradeDrum({ grades, value, onChange }: {
       </button>
 
       <div className="relative w-40 overflow-hidden" style={{ height: ITEM_H * 3 }}>
-        <div className="absolute inset-x-0 rounded-2xl bg-rock-50 dark:bg-rock-900/30 border-2 border-rock-400 dark:border-rock-500 pointer-events-none z-10"
+        {/* Selection box sits below the scroll list */}
+        <div className="absolute inset-x-0 rounded-2xl bg-rock-50 dark:bg-rock-900/30 border-2 border-rock-400 dark:border-rock-500 pointer-events-none z-0"
           style={{ top: ITEM_H, height: ITEM_H }} />
-        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white dark:from-stone-950 to-transparent pointer-events-none z-10" />
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white dark:from-stone-950 to-transparent pointer-events-none z-10" />
+        {/* Fade gradients sit above the scroll list to soften non-selected items */}
+        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white dark:from-stone-950 to-transparent pointer-events-none z-20" />
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white dark:from-stone-950 to-transparent pointer-events-none z-20" />
         <div
           ref={listRef}
           onScroll={handleScroll}
-          className="h-full overflow-y-scroll snap-y snap-mandatory"
+          className="relative z-10 h-full overflow-y-scroll snap-y snap-mandatory"
           style={{ scrollbarWidth: 'none' }}
         >
           <div style={{ height: ITEM_H }} />
