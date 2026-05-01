@@ -100,7 +100,7 @@ export async function seedPeakGritNewCrags(ds: DataSource) {
   // ── Ramshaw Rocks ─────────────────────────────────────────────────────────
   const ramshaw = await upsertCrag(cragRepo, {
     name: 'Ramshaw Rocks', region: peak, regionId: peak.id,
-    latitude: 53.1330, longitude: -1.9570, rockType: RockType.GRITSTONE,
+    latitude: 53.1480, longitude: -2.0030, rockType: RockType.GRITSTONE,
     description: 'A dramatic moorland gritstone outcrop on the Staffordshire moors above Leek. Excellent bouldering and short routes, with superb views over the Staffordshire moorlands.',
     approach: 'Roadside parking on A53 near the Mermaid pub (SK 0168 6333). 5 min walk to the rocks.',
     parkingInfo: 'Lay-bys on A53 Buxton–Leek road near Ramshaw. No dedicated car park.',
