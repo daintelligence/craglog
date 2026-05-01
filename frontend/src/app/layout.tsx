@@ -44,6 +44,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="CragLog" />
         <meta name="format-detection" content="telephone=no" />
+        {/* Inline script applies colour+dark theme before first paint to avoid flash */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            try {
+              var ct = localStorage.getItem('craglog_color_theme');
+              if (ct) document.documentElement.setAttribute('data-theme', ct);
+              var t = localStorage.getItem('craglog_theme');
+              if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches))
+                document.documentElement.classList.add('dark');
+            } catch(e) {}
+          })();
+        ` }} />
       </head>
       <body>
         <Providers>{children}</Providers>

@@ -10,9 +10,11 @@ import {
 import { authApi, usersApi, statsApi, badgesApi, exportApi, getErrorMessage } from '@/lib/api';
 import { clearAuth, getStoredUser, saveAuth } from '@/lib/auth';
 import { useDarkMode } from '@/hooks/useDarkMode';
+import { useColorTheme } from '@/hooks/useColorTheme';
 import { cn } from '@/lib/utils';
 import type { User, BadgeTier } from '@/types';
 import { BADGE_TIER_COLORS } from '@/types';
+import type { ColorTheme } from '@/lib/sessionStore';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -28,6 +30,56 @@ function memberSince(dateStr: string) {
 const TIER_LABEL: Record<BadgeTier, string> = {
   bronze: 'Bronze', silver: 'Silver', gold: 'Gold', platinum: 'Platinum',
 };
+
+// ─── colour theme picker ──────────────────────────────────────────────────────
+
+const COLOR_THEMES: { id: ColorTheme; label: string; swatch: string }[] = [
+  { id: 'rock',      label: 'Rock',      swatch: '#6d5035' },
+  { id: 'alpine',    label: 'Alpine',    swatch: '#2563eb' },
+  { id: 'forest',    label: 'Forest',    swatch: '#16a34a' },
+  { id: 'sandstone', label: 'Sandstone', swatch: '#ea580c' },
+  { id: 'slate',     label: 'Slate',     swatch: '#7c3aed' },
+  { id: 'fuchsia',   label: 'Fuchsia',   swatch: '#c026d3' },
+];
+
+function ThemePicker({ current, onChange }: { current: ColorTheme; onChange: (t: ColorTheme) => void }) {
+  return (
+    <div className="px-4 py-4">
+      <p className="text-xs font-medium text-stone-500 dark:text-stone-400 mb-3">Colour scheme</p>
+      <div className="grid grid-cols-6 gap-2">
+        {COLOR_THEMES.map(({ id, label, swatch }) => (
+          <button
+            key={id}
+            onClick={() => onChange(id)}
+            title={label}
+            className="flex flex-col items-center gap-1.5 group"
+          >
+            <div
+              className={cn(
+                'w-9 h-9 rounded-full transition-all duration-150 flex items-center justify-center',
+                current === id
+                  ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-stone-900 scale-110'
+                  : 'opacity-70 group-hover:opacity-100 group-hover:scale-105',
+              )}
+              style={{
+                backgroundColor: swatch,
+                outline: current === id ? `2px solid ${swatch}` : 'none',
+                outlineOffset: '3px',
+              }}
+            >
+              {current === id && (
+                <svg className="w-4 h-4 text-white drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+            <span className="text-[10px] text-stone-400 dark:text-stone-500 leading-none">{label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
@@ -391,6 +443,7 @@ function BadgesGrid() {
 export default function ProfilePage() {
   const router = useRouter();
   const { isDark, toggle } = useDarkMode();
+  const { colorTheme, changeTheme } = useColorTheme();
   const [sheet, setSheet] = useState<'edit' | 'password' | 'export' | null>(null);
 
   const { data: user } = useQuery<User>({
@@ -506,6 +559,8 @@ export default function ProfilePage() {
               </div>
             }
           />
+          <div className="divider mx-4" />
+          <ThemePicker current={colorTheme} onChange={changeTheme} />
         </Card>
       </div>
 

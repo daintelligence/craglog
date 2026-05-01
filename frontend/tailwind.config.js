@@ -6,16 +6,16 @@ module.exports = {
     extend: {
       colors: {
         rock: {
-          50:  '#f5f3f0',
-          100: '#e8e3da',
-          200: '#d0c5b3',
-          300: '#b5a285',
-          400: '#9b7e5a',
-          500: '#856440',
-          600: '#6d5035',
-          700: '#57402d',
-          800: '#473529',
-          900: '#3d2d24',
+          50:  'rgb(var(--rock-50) / <alpha-value>)',
+          100: 'rgb(var(--rock-100) / <alpha-value>)',
+          200: 'rgb(var(--rock-200) / <alpha-value>)',
+          300: 'rgb(var(--rock-300) / <alpha-value>)',
+          400: 'rgb(var(--rock-400) / <alpha-value>)',
+          500: 'rgb(var(--rock-500) / <alpha-value>)',
+          600: 'rgb(var(--rock-600) / <alpha-value>)',
+          700: 'rgb(var(--rock-700) / <alpha-value>)',
+          800: 'rgb(var(--rock-800) / <alpha-value>)',
+          900: 'rgb(var(--rock-900) / <alpha-value>)',
         },
         chalk: {
           50:  '#fafafa',

@@ -4,11 +4,12 @@
 import type { Crag } from '@/types';
 
 const KEYS = {
-  session: 'craglog_active_session',
-  recent:  'craglog_recent_crags',
-  favs:    'craglog_fav_crags',
-  theme:   'craglog_theme',
-  onboarded: 'craglog_onboarded',
+  session:    'craglog_active_session',
+  recent:     'craglog_recent_crags',
+  favs:       'craglog_fav_crags',
+  theme:      'craglog_theme',
+  colorTheme: 'craglog_color_theme',
+  onboarded:  'craglog_onboarded',
 };
 
 export interface ActiveSession {
@@ -81,7 +82,7 @@ export function isFavouriteCrag(cragId: string): boolean {
   return getFavouriteCrags().some((c) => c.id === cragId);
 }
 
-// ─── Theme ────────────────────────────────────────────────────────────────────
+// ─── Dark mode theme ──────────────────────────────────────────────────────────
 
 export function getTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'light';
@@ -93,6 +94,21 @@ export function setTheme(theme: 'light' | 'dark') {
   localStorage.setItem(KEYS.theme, theme);
   if (theme === 'dark') document.documentElement.classList.add('dark');
   else document.documentElement.classList.remove('dark');
+}
+
+// ─── Colour theme ─────────────────────────────────────────────────────────────
+
+export type ColorTheme = 'rock' | 'alpine' | 'forest' | 'sandstone' | 'slate' | 'fuchsia';
+
+export function getColorTheme(): ColorTheme {
+  if (typeof window === 'undefined') return 'rock';
+  return (localStorage.getItem(KEYS.colorTheme) as ColorTheme) || 'rock';
+}
+
+export function setColorTheme(theme: ColorTheme) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(KEYS.colorTheme, theme);
+  document.documentElement.setAttribute('data-theme', theme);
 }
 
 // ─── Onboarding ───────────────────────────────────────────────────────────────
