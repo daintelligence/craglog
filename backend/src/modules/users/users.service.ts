@@ -29,4 +29,8 @@ export class UsersService {
     await this.userRepository.update(id, data);
     return this.findById(id);
   }
+
+  async findByResetToken(tokenHash: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { resetTokenHash: tokenHash } });
+  }
 }

@@ -94,7 +94,7 @@ function GradeDrum({ grades, value, onChange }: {
               className={cn(
                 'flex items-center justify-center snap-center cursor-pointer transition-all duration-100',
                 g === value
-                  ? 'text-rock-600 dark:text-rock-400 font-black text-4xl'
+                  ? 'text-stone-900 dark:text-white font-black text-4xl'
                   : 'text-stone-400 dark:text-stone-600 font-semibold text-2xl',
               )}
             >

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { statsApi, badgesApi, cragsApi } from '@/lib/api';
+import { statsApi, badgesApi, cragsApi, ascentsApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { getStoredUser } from '@/lib/auth';
 import { GradeChip } from '@/components/GradeChip';
@@ -10,7 +10,7 @@ import { ASCENT_TYPE_LABELS } from '@/types';
 import { cn } from '@/lib/utils';
 import {
   PlusCircle, TrendingUp, Mountain, Calendar,
-  ChevronRight, Flame, Award, MapPin, Navigation,
+  ChevronRight, Flame, Award, MapPin, Navigation, Dumbbell,
 } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import {
@@ -217,6 +217,14 @@ export default function DashboardPage() {
     queryFn: statsApi.heatmap,
     staleTime: 5 * 60 * 1000,
   });
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const { data: gymRaw } = useQuery({
+    queryKey: ['ascents-gym-today'],
+    queryFn: () => ascentsApi.list({ startDate: todayStr, endDate: todayStr }),
+    select: (d: any) => (d.ascents ?? []).filter((a: any) => a.gymStyle),
+    staleTime: 30000,
+  });
+  const todayGym: any[] = gymRaw ?? [];
 
   // Fill 364-day grid from API data
   const heatmapCells = useMemo(() => {
@@ -287,6 +295,27 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* ── Gym session card ──────────────────────────────────────────── */}
+      {todayGym.length > 0 && (
+        <Link href="/gym" className="card p-4 flex items-center gap-4 hover:border-amber-300 transition-colors active:scale-[0.99] block">
+          <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+            <Dumbbell className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-stone-900 dark:text-stone-50 text-sm">Gym session in progress</p>
+            <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+              {todayGym.length} {todayGym.length === 1 ? 'climb' : 'climbs'} ·{' '}
+              {(() => {
+                const grades = todayGym.map((a: any) => a.freeGrade).filter(Boolean);
+                const best = grades.sort().at(-1);
+                return best ? `best ${best}` : '';
+              })()}
+            </p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-stone-300 shrink-0" />
+        </Link>
+      )}
 
       {/* ── Recent badges ─────────────────────────────────────────────── */}
       {recentBadges.length > 0 && (
@@ -378,7 +407,7 @@ export default function DashboardPage() {
         <div className="card p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-stone-900 dark:text-stone-100 text-sm">Grade pyramid</h2>
-            <span className="text-xs text-stone-400">{gradeDistr.reduce((s, d) => s + d.count, 0)} total</span>
+            <span className="text-xs text-stone-400">{gradeDistr.reduce((s: number, d: any) => s + d.count, 0)} total</span>
           </div>
           <GradePyramid distribution={gradeDistr} />
         </div>

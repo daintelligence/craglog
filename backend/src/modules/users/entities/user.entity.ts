@@ -4,7 +4,6 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
   BeforeInsert,
   BeforeUpdate,
 } from 'typeorm';
@@ -40,6 +39,12 @@ export class User {
 
   @Column({ nullable: true, name: 'refresh_token_hash' })
   refreshTokenHash: string | null;
+
+  @Column({ nullable: true, name: 'reset_token_hash' })
+  resetTokenHash: string | null;
+
+  @Column({ nullable: true, name: 'reset_token_expiry', type: 'timestamptz' })
+  resetTokenExpiry: Date | null;
 
   @CreateDateColumn()
   createdAt: Date;

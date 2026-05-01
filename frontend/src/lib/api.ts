@@ -86,6 +86,9 @@ export const authApi = {
   refresh: () => api.post('/auth/refresh').then((r) => r.data),
   logout: () => api.post('/auth/logout').catch(() => {}),
   me: () => api.get('/auth/me').then((r) => r.data),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token: string, newPassword: string) =>
+    api.post('/auth/reset-password', { token, newPassword }),
 };
 
 // ─── Crags ────────────────────────────────────────────────────────────────────

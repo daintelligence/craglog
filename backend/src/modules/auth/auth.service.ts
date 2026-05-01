@@ -1,7 +1,8 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
+import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { InvitesService } from '../invites/invites.service';
 import { RegisterDto } from './dto/register.dto';
@@ -57,6 +58,51 @@ export class AuthService {
     if (incoming !== user.refreshTokenHash) throw new UnauthorizedException('Invalid refresh token');
 
     return this.issueTokens(user.id, user.email, user);
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) return; // don't reveal whether email exists
+
+    const token = randomBytes(32).toString('hex');
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await this.usersService.update(user.id, {
+      resetTokenHash: this.hashToken(token),
+      resetTokenExpiry: expiry,
+    });
+
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+    const resendKey = this.configService.get<string>('RESEND_API_KEY');
+
+    if (resendKey) {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'CragLog <noreply@craglog.app>',
+          to: email,
+          subject: 'Reset your CragLog password',
+          html: `<p>Hi ${user.name},</p><p>Click below to reset your password. This link expires in 1 hour.</p><p><a href="${resetUrl}" style="background:#9c6b40;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Reset password</a></p><p>If you didn't request this, you can safely ignore this email.</p>`,
+        }),
+      });
+    } else {
+      console.log(`[DEV] Password reset link for ${email}: ${resetUrl}`);
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const user = await this.usersService.findByResetToken(this.hashToken(token));
+    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+      throw new BadRequestException('Invalid or expired reset link');
+    }
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await this.usersService.update(user.id, {
+      password: hashed,
+      resetTokenHash: null,
+      resetTokenExpiry: null,
+      refreshTokenHash: null, // invalidate all existing sessions
+    });
   }
 
   async logout(userId: string): Promise<void> {
