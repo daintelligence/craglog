@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ascentsApi, badgesApi } from '@/lib/api';
 import { today } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, ChevronUp, ChevronDown, Dumbbell, Trash2, Award } from 'lucide-react';
+import { CheckCircle2, ChevronUp, ChevronDown, Dumbbell, Trash2, Award, Calendar, MessageSquare, Check, X } from 'lucide-react';
 
 // ── grades ────────────────────────────────────────────────────────────────────
 
@@ -156,15 +156,17 @@ export default function GymPage() {
   const [flash,        setFlash]        = useState<Style | null>(null);
   const [busy,         setBusy]         = useState(false);
   const [toastBadge,   setToastBadge]   = useState<any | null>(null);
+  const [sessionDate,  setSessionDate]  = useState(today());
+  const [editNoteId,   setEditNoteId]   = useState<string | null>(null);
+  const [noteText,     setNoteText]     = useState('');
 
   const grades   = gradeSystem === 'boulder' ? VGRADES : FRENCH;
   const grade    = gradeSystem === 'boulder' ? boulderGrade : ropeGrade;
   const setGrade = gradeSystem === 'boulder' ? setBoulderGrade : setRopeGrade;
 
-  const todayStr = today();
   const { data: raw = [] } = useQuery({
-    queryKey: ['ascents-gym-today'],
-    queryFn: () => ascentsApi.list({ startDate: todayStr, endDate: todayStr }),
+    queryKey: ['ascents-gym-today', sessionDate],
+    queryFn: () => ascentsApi.list({ startDate: sessionDate, endDate: sessionDate }),
     select: (d: any) => (d.ascents ?? []).filter((a: any) => a.gymStyle),
   });
   const todayAscents = raw as any[];
@@ -216,18 +218,18 @@ export default function GymPage() {
     setGradeSystem(dx < 0 ? 'boulder' : 'rope');
   }
 
-  async function log(style: Style) {
+  async function log(style: Style, ascentType: 'redpoint' | 'dog' = 'redpoint') {
     if (busy) return;
     const newSystem = STYLES.find((s) => s.value === style)!.system;
     setActiveStyle(style);
     setGradeSystem(newSystem);
-    if (newSystem !== gradeSystem) return; // just switched system, don't log
+    if (newSystem !== gradeSystem) return;
 
     setBusy(true);
     setFlash(style);
     const logGrade = newSystem === 'boulder' ? boulderGrade : ropeGrade;
     try {
-      await ascentsApi.gymLog({ grade: logGrade, style, date: todayStr });
+      await ascentsApi.gymLog({ grade: logGrade, style, date: sessionDate, ascentType });
       qc.invalidateQueries({ queryKey: ['ascents-gym-today'] });
       qc.invalidateQueries({ queryKey: ['ascents'] });
       qc.invalidateQueries({ queryKey: ['stats'] });
@@ -241,7 +243,14 @@ export default function GymPage() {
     const last = todayAscents[todayAscents.length - 1];
     if (!last) return;
     await ascentsApi.delete(last.id);
-    qc.invalidateQueries({ queryKey: ['ascents-gym-today'] });
+    qc.invalidateQueries({ queryKey: ['ascents-gym-today', sessionDate] });
+  }
+
+  async function saveNote(id: string) {
+    await ascentsApi.update(id, { notes: noteText.trim() || undefined });
+    qc.invalidateQueries({ queryKey: ['ascents-gym-today', sessionDate] });
+    setEditNoteId(null);
+    setNoteText('');
   }
 
   const byStyle = STYLES.reduce<Record<string, number>>((acc, s) => {
@@ -253,11 +262,24 @@ export default function GymPage() {
     <div className="flex flex-col items-center gap-5 pt-1 pb-6 min-h-[calc(100vh-160px)]">
 
       {/* Header */}
-      <div className="w-full text-center space-y-1">
+      <div className="w-full text-center space-y-1.5">
         <div className="flex items-center justify-center gap-2">
           <Dumbbell className="w-5 h-5 text-stone-400" />
           <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">Gym session</h1>
         </div>
+
+        {/* Date picker */}
+        <div className="flex items-center justify-center gap-2">
+          <Calendar className="w-3.5 h-3.5 text-stone-400" />
+          <input
+            type="date"
+            value={sessionDate}
+            max={today()}
+            onChange={(e) => setSessionDate(e.target.value)}
+            className="text-xs text-stone-500 dark:text-stone-400 bg-transparent border-none outline-none cursor-pointer"
+          />
+        </div>
+
         {sessionCount > 0 ? (
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <span className="text-2xl font-black text-rock-600">{sessionCount}</span>
@@ -353,6 +375,20 @@ export default function GymPage() {
         })}
       </div>
 
+      {/* Attempt row — log a fall/hang without counting as a send */}
+      <div className="w-full grid grid-cols-4 gap-2 px-1">
+        {STYLES.map((s) => (
+          <button
+            key={s.value}
+            onClick={() => log(s.value, 'dog')}
+            disabled={busy}
+            className="py-2 rounded-xl border-2 border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 text-xs font-semibold hover:border-stone-300 active:scale-95 transition-all"
+          >
+            {s.short} fall
+          </button>
+        ))}
+      </div>
+
       {/* Undo */}
       {sessionCount > 0 && (
         <button onClick={undoLast} className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-red-500 transition-colors">
@@ -361,16 +397,46 @@ export default function GymPage() {
         </button>
       )}
 
-      {/* Recent climbs */}
+      {/* Session log */}
       {sessionCount > 0 && (
         <div className="w-full space-y-2">
-          <p className="text-xs font-bold text-stone-400 uppercase tracking-wide">Today</p>
-          {[...todayAscents].reverse().slice(0, 6).map((a: any) => (
-            <div key={a.id} className="card px-4 py-2.5 flex items-center gap-3">
-              <span className="font-black text-xl text-rock-600 w-14">{a.freeGrade}</span>
-              <span className="text-sm text-stone-500 capitalize flex-1">
-                {a.gymStyle === 'toprope' ? 'Top rope' : a.gymStyle}
-              </span>
+          <p className="text-xs font-bold text-stone-400 uppercase tracking-wide">
+            {sessionDate === today() ? 'Today' : sessionDate}
+          </p>
+          {[...todayAscents].reverse().slice(0, 10).map((a: any) => (
+            <div key={a.id} className="card px-4 py-2.5">
+              <div className="flex items-center gap-3">
+                <span className="font-black text-xl text-rock-600 w-14">{a.freeGrade}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm text-stone-600 dark:text-stone-400 capitalize">
+                    {a.gymStyle === 'toprope' ? 'Top rope' : a.gymStyle}
+                    {a.ascentType === 'dog' && <span className="ml-1.5 text-xs text-amber-500 font-semibold">attempt</span>}
+                  </span>
+                  {a.notes && editNoteId !== a.id && (
+                    <p className="text-xs text-stone-400 truncate">{a.notes}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => { setEditNoteId(a.id); setNoteText(a.notes || ''); }}
+                  className="p-1.5 text-stone-300 hover:text-rock-500 transition-colors shrink-0"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              {editNoteId === a.id && (
+                <div className="mt-2 flex gap-2 items-center">
+                  <input
+                    autoFocus
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && saveNote(a.id)}
+                    placeholder="Add a note…"
+                    className="flex-1 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl px-3 py-2 outline-none focus:border-rock-400"
+                  />
+                  <button onClick={() => saveNote(a.id)} className="p-1.5 text-emerald-500"><Check className="w-4 h-4" /></button>
+                  <button onClick={() => setEditNoteId(null)} className="p-1.5 text-stone-400"><X className="w-4 h-4" /></button>
+                </div>
+              )}
             </div>
           ))}
         </div>

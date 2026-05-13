@@ -73,15 +73,24 @@ function EditModal({ ascent, onClose, onSaved }: { ascent: Ascent; onClose: () =
         </div>
 
         {/* Route info */}
-        <div className="bg-stone-50 dark:bg-stone-800 rounded-2xl p-3 flex items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-stone-900 dark:text-stone-100 text-sm truncate">{(ascent as any).route?.name || 'Route'}</p>
-            <p className="text-xs text-stone-400 truncate">{(ascent as any).crag?.name || ''}</p>
+        {(ascent as any).gymStyle ? (
+          <div className="bg-stone-50 dark:bg-stone-800 rounded-2xl p-3 flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-stone-900 dark:text-stone-100 text-sm">Gym climb</p>
+              <p className="text-xs text-stone-400 capitalize">{(ascent as any).gymStyle} · {(ascent as any).freeGrade}</p>
+            </div>
           </div>
-          {(ascent as any).route?.grade && (
-            <GradeChip grade={(ascent as any).route.grade} gradeSystem={(ascent as any).route.gradeSystem} size="sm" />
-          )}
-        </div>
+        ) : (
+          <div className="bg-stone-50 dark:bg-stone-800 rounded-2xl p-3 flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-stone-900 dark:text-stone-100 text-sm truncate">{(ascent as any).route?.name || 'Route'}</p>
+              <p className="text-xs text-stone-400 truncate">{(ascent as any).crag?.name || ''}</p>
+            </div>
+            {(ascent as any).route?.grade && (
+              <GradeChip grade={(ascent as any).route.grade} gradeSystem={(ascent as any).route.gradeSystem} size="sm" />
+            )}
+          </div>
+        )}
 
         {/* Style */}
         <div>
@@ -248,12 +257,17 @@ function AscentRow({ ascent, onEdit, onDelete, onTickAgain }: {
       <div className="shrink-0">
         {a.route?.grade
           ? <GradeChip grade={a.route.grade} gradeSystem={a.route.gradeSystem} size="sm" />
+          : a.freeGrade
+          ? <span className="text-xs font-black text-rock-600 bg-rock-50 dark:bg-rock-900/30 px-2 py-1 rounded-lg">{a.freeGrade}</span>
           : <div className="w-10 h-6 bg-stone-100 rounded-lg" />
         }
       </div>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-stone-900 dark:text-stone-100 truncate text-sm leading-snug">
-          {a.route?.name || 'Unknown route'}
+          {a.gymStyle
+            ? (a.notes?.split('\n')[0] || `Gym ${a.gymStyle === 'toprope' ? 'top rope' : a.gymStyle}`)
+            : (a.route?.name || 'Unknown route')
+          }
         </p>
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
           {ascent.starRating != null && ascent.starRating > 0 && (

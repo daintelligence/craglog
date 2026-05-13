@@ -7,6 +7,7 @@ import {
   Award, Mountain, Calendar, TrendingUp, Edit2, Lock, Check,
   X, Eye, EyeOff, Star, Shield, MessageSquare, UserPlus, BookOpen,
 } from 'lucide-react';
+import { BadgeShield, TIER_ORDER, TIER_LABEL as SHIELD_TIER_LABEL } from '@/components/BadgeShield';
 import { authApi, usersApi, statsApi, badgesApi, exportApi, getErrorMessage } from '@/lib/api';
 import { clearAuth, getStoredUser, saveAuth } from '@/lib/auth';
 import { useDarkMode } from '@/hooks/useDarkMode';
@@ -415,25 +416,37 @@ function BadgesGrid() {
 
   if (!badges?.length) return null;
 
+  // Group by tier in display order
+  const byTier = TIER_ORDER.reduce<Record<string, any[]>>((acc, t) => {
+    acc[t] = badges.filter(({ badge }: any) => badge.tier === t);
+    return acc;
+  }, {} as any);
+
   return (
-    <div>
-      <SectionTitle>Badges Earned</SectionTitle>
-      <div className="grid grid-cols-3 gap-3">
-        {badges.map(({ badge, earnedAt }: { badge: any; earnedAt: string }) => (
-          <div
-            key={badge.id}
-            className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-100 dark:border-stone-800 p-3 flex flex-col items-center gap-2 text-center"
-          >
-            <div className={cn('w-12 h-12 rounded-full bg-gradient-to-br flex items-center justify-center text-2xl', BADGE_TIER_COLORS[badge.tier as BadgeTier])}>
-              {badge.icon}
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-stone-900 dark:text-stone-50 leading-tight">{badge.name}</p>
-              <p className="text-[10px] text-stone-400 mt-0.5">{TIER_LABEL[badge.tier as BadgeTier]}</p>
-            </div>
+    <div className="space-y-5">
+      <SectionTitle>Badges Earned · {badges.length}</SectionTitle>
+      {TIER_ORDER.filter((t) => byTier[t]?.length > 0).map((tier) => (
+        <div key={tier}>
+          <p className="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider px-1 mb-3">
+            {SHIELD_TIER_LABEL[tier]} · {byTier[tier].length}
+          </p>
+          <div className="grid grid-cols-3 gap-4">
+            {byTier[tier].map(({ badge }: any) => (
+              <div
+                key={badge.id}
+                className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-100 dark:border-stone-800 py-4 flex items-center justify-center"
+              >
+                <BadgeShield
+                  tier={tier as BadgeTier}
+                  icon={badge.icon}
+                  name={badge.name}
+                  size="md"
+                />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }

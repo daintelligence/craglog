@@ -12,6 +12,8 @@ import {
   PlusCircle, TrendingUp, Mountain, Calendar,
   ChevronRight, Flame, Award, MapPin, Navigation, Dumbbell,
 } from 'lucide-react';
+import { BadgeShield, TIER_ORDER } from '@/components/BadgeShield';
+import type { BadgeTier } from '@/types';
 import { useMemo, useState, useEffect } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -266,7 +268,13 @@ export default function DashboardPage() {
   const totals    = stats?.totals;
   const recent    = stats?.recentAscents || [];
   const gradeDistr = stats?.gradeDistribution || [];
-  const recentBadges = earnedBadges.slice(0, 3);
+  // Sort badges by tier (best first) then recency
+  const sortedBadges = [...earnedBadges].sort((a: any, b: any) => {
+    const ta = TIER_ORDER.indexOf(a.badge?.tier ?? 'bronze');
+    const tb = TIER_ORDER.indexOf(b.badge?.tier ?? 'bronze');
+    return ta !== tb ? ta - tb : new Date(b.earnedAt).getTime() - new Date(a.earnedAt).getTime();
+  });
+  const displayBadges = sortedBadges.slice(0, 5);
 
   const highestGrade = gradeDistr.length
     ? [...gradeDistr].sort((a, b) => b.difficulty - a.difficulty)[0]?.grade
@@ -317,31 +325,27 @@ export default function DashboardPage() {
         </Link>
       )}
 
-      {/* ── Recent badges ─────────────────────────────────────────────── */}
-      {recentBadges.length > 0 && (
+      {/* ── Achievements ──────────────────────────────────────────────── */}
+      {displayBadges.length > 0 && (
         <div className="card p-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Award className="w-4 h-4 text-amber-500" />
-              <h2 className="font-bold text-stone-900 dark:text-stone-100 text-sm">Recent badges</h2>
+              <h2 className="font-bold text-stone-900 dark:text-stone-100 text-sm">Achievements</h2>
             </div>
-            <Link href="/badges" className="text-xs text-rock-600 dark:text-rock-400 font-semibold flex items-center gap-0.5">
-              All <ChevronRight className="w-3 h-3" />
+            <Link href="/profile" className="text-xs text-rock-600 dark:text-rock-400 font-semibold flex items-center gap-0.5">
+              All {earnedBadges.length} <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-none">
-            {recentBadges.map(({ badge }: any) => (
-              <div key={badge.id} className="flex flex-col items-center gap-1.5 shrink-0 w-16">
-                <div className={cn(
-                  'w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-md ring-2',
-                  badge.tier === 'gold'   && 'bg-gradient-to-br from-amber-300 to-amber-500 ring-amber-300',
-                  badge.tier === 'silver' && 'bg-gradient-to-br from-stone-300 to-stone-400 ring-stone-300',
-                  badge.tier === 'bronze' && 'bg-gradient-to-br from-orange-300 to-orange-500 ring-orange-300',
-                  !badge.tier && 'bg-gradient-to-br from-rock-400 to-rock-600 ring-rock-300',
-                )}>
-                  {badge.icon || '🏅'}
-                </div>
-                <span className="text-[10px] text-center text-stone-600 dark:text-stone-400 font-semibold leading-tight">{badge.name}</span>
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none justify-start">
+            {displayBadges.map(({ badge }: any) => (
+              <div key={badge.id} className="shrink-0">
+                <BadgeShield
+                  tier={badge.tier as BadgeTier}
+                  icon={badge.icon}
+                  name={badge.name}
+                  size="lg"
+                />
               </div>
             ))}
           </div>
