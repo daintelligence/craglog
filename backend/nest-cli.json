@@ -7,12 +7,12 @@
     "assets": [
       {
         "include": "modules/badges/config/*.json",
-        "outDir": "dist/src",
+        "outDir": "dist",
         "watchAssets": true
       },
       {
         "include": "modules/export/schemas/*.json",
-        "outDir": "dist/src",
+        "outDir": "dist",
         "watchAssets": true
       }
     ]
