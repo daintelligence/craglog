@@ -1,0 +1,164 @@
+[
+  {
+    "id": "nicas_1",
+    "scheme": "NICAS",
+    "level": 1,
+    "title": "NICAS Level 1",
+    "subtitle": "Indoor Toprope Foundation",
+    "description": "Master the fundamental skills for safe indoor toprope climbing.",
+    "icon": "shield",
+    "skills": [
+      { "id": "harness-fit", "label": "Fit and check a harness independently" },
+      { "id": "tie-in-knot", "label": "Tie a figure-of-eight retrace knot correctly" },
+      { "id": "buddy-check", "label": "Complete a buddy check before climbing" },
+      { "id": "belay-setup", "label": "Thread and lock a belay device correctly" },
+      { "id": "belaying", "label": "Belay a climber safely on toprope" },
+      { "id": "lowering", "label": "Lower a climber smoothly to the ground" },
+      { "id": "communication", "label": "Use standard climbing calls correctly" },
+      { "id": "basic-footwork", "label": "Demonstrate basic footwork and balance on the wall" }
+    ]
+  },
+  {
+    "id": "nicas_2",
+    "scheme": "NICAS",
+    "level": 2,
+    "title": "NICAS Level 2",
+    "subtitle": "Indoor Lead Foundation",
+    "description": "Develop the skills to lead climb safely indoors.",
+    "icon": "shield",
+    "skills": [
+      { "id": "nicas1-prereq", "label": "Hold NICAS Level 1 award" },
+      { "id": "lead-clip-low", "label": "Clip quickdraws correctly at low height" },
+      { "id": "lead-clip-high", "label": "Clip quickdraws at full extension safely" },
+      { "id": "controlled-fall", "label": "Take controlled lead falls" },
+      { "id": "lead-belay", "label": "Lead belay a climber safely" },
+      { "id": "catch-fall", "label": "Catch a lead fall correctly" },
+      { "id": "route-reading", "label": "Read a route before climbing" },
+      { "id": "lead-independence", "label": "Lead a route independently at your level" }
+    ]
+  },
+  {
+    "id": "nicas_3",
+    "scheme": "NICAS",
+    "level": 3,
+    "title": "NICAS Level 3",
+    "subtitle": "Indoor Lead Development",
+    "description": "Develop consistent lead climbing technique and belaying skills under pressure.",
+    "icon": "shield",
+    "skills": [
+      { "id": "nicas2-prereq", "label": "Hold NICAS Level 2 award" },
+      { "id": "consistent-lead", "label": "Lead routes consistently at your level" },
+      { "id": "dynamic-movement", "label": "Use dynamic movement and coordination" },
+      { "id": "confident-falls", "label": "Take falls confidently on overhung terrain" },
+      { "id": "belay-under-pressure", "label": "Belay confidently when a climber falls unexpectedly" },
+      { "id": "risk-assess", "label": "Identify and manage risks at the wall" },
+      { "id": "5-routes-lead", "label": "Lead 5 different routes at grade without falls" },
+      { "id": "warm-up-routine", "label": "Plan and execute an appropriate warm-up routine" }
+    ]
+  },
+  {
+    "id": "nicas_4",
+    "scheme": "NICAS",
+    "level": 4,
+    "title": "NICAS Level 4",
+    "subtitle": "Outdoor Foundation",
+    "description": "Transition skills for toproping and being seconded on outdoor rock.",
+    "icon": "shield",
+    "skills": [
+      { "id": "nicas3-prereq", "label": "Hold NICAS Level 3 award" },
+      { "id": "rock-id", "label": "Identify common rock types and their properties" },
+      { "id": "outdoor-ethics", "label": "Understand outdoor access, ethics and conservation" },
+      { "id": "anchor-assess", "label": "Assess and use fixed anchors safely" },
+      { "id": "abseil-safety", "label": "Abseil safely from a fixed anchor" },
+      { "id": "hazard-awareness", "label": "Identify environmental hazards on outdoor rock" },
+      { "id": "first-aid-aware", "label": "Know emergency procedures and first aid principles" },
+      { "id": "outdoor-second", "label": "Second a roped route outdoors" }
+    ]
+  },
+  {
+    "id": "nicas_5",
+    "scheme": "NICAS",
+    "level": 5,
+    "title": "NICAS Level 5",
+    "subtitle": "Outdoor Lead",
+    "description": "Lead climbing on outdoor rock with appropriate gear and judgement.",
+    "icon": "shield",
+    "skills": [
+      { "id": "nicas4-prereq", "label": "Hold NICAS Level 4 award" },
+      { "id": "rack-selection", "label": "Select an appropriate rack for the route" },
+      { "id": "gear-placement", "label": "Place and assess protection reliably" },
+      { "id": "route-find", "label": "Navigate a route using a guidebook and terrain features" },
+      { "id": "multi-pitch-intro", "label": "Lead a pitch and bring up a second" },
+      { "id": "self-rescue-basic", "label": "Perform a basic self-rescue from a stuck belay" },
+      { "id": "mental-skills", "label": "Manage fear and commitment on challenging terrain" },
+      { "id": "outdoor-lead-5", "label": "Lead 5 outdoor routes with clean placements" }
+    ]
+  },
+  {
+    "id": "nibas_1",
+    "scheme": "NIBAS",
+    "level": 1,
+    "title": "NIBAS Level 1",
+    "subtitle": "Bouldering Introduction",
+    "description": "Safe and confident introduction to indoor bouldering.",
+    "icon": "mountain",
+    "skills": [
+      { "id": "etiquette", "label": "Understand bouldering wall etiquette and rules" },
+      { "id": "falling-safely", "label": "Land safely from a controlled fall" },
+      { "id": "spotting", "label": "Spot a fellow climber correctly" },
+      { "id": "basic-movement", "label": "Use basic movement techniques on easy problems" },
+      { "id": "warm-up", "label": "Complete a suitable warm-up and cool-down" }
+    ]
+  },
+  {
+    "id": "nibas_2",
+    "scheme": "NIBAS",
+    "level": 2,
+    "title": "NIBAS Level 2",
+    "subtitle": "Bouldering Development",
+    "description": "Develop movement skills and problem-solving on moderate boulders.",
+    "icon": "mountain",
+    "skills": [
+      { "id": "nibas1-prereq", "label": "Hold NIBAS Level 1 award" },
+      { "id": "dynamic-moves", "label": "Execute dynamic moves with control" },
+      { "id": "body-tension", "label": "Maintain body tension on steep terrain" },
+      { "id": "precise-footwork", "label": "Place feet precisely on small holds" },
+      { "id": "problem-solving", "label": "Work out a V3/4 problem systematically" },
+      { "id": "training-principles", "label": "Understand basic training and injury prevention" }
+    ]
+  },
+  {
+    "id": "nibas_3",
+    "scheme": "NIBAS",
+    "level": 3,
+    "title": "NIBAS Level 3",
+    "subtitle": "Advanced Bouldering",
+    "description": "Advanced technique, power training, and introduction to coaching.",
+    "icon": "mountain",
+    "skills": [
+      { "id": "nibas2-prereq", "label": "Hold NIBAS Level 2 award" },
+      { "id": "advanced-technique", "label": "Demonstrate advanced techniques (heel hooks, toe hooks, drop knees)" },
+      { "id": "power-training", "label": "Train power safely with appropriate rest periods" },
+      { "id": "comp-prep", "label": "Prepare and compete in a bouldering competition" },
+      { "id": "coaching-intro", "label": "Provide basic movement feedback to a partner" },
+      { "id": "injury-prevention", "label": "Manage common finger and shoulder injuries proactively" }
+    ]
+  },
+  {
+    "id": "nibas_4",
+    "scheme": "NIBAS",
+    "level": 4,
+    "title": "NIBAS Level 4",
+    "subtitle": "Bouldering Leader",
+    "description": "Lead bouldering sessions, manage safety, and inspire others.",
+    "icon": "mountain",
+    "skills": [
+      { "id": "nibas3-prereq", "label": "Hold NIBAS Level 3 award" },
+      { "id": "session-planning", "label": "Plan and lead a bouldering session for a group" },
+      { "id": "risk-management", "label": "Conduct a risk assessment for a bouldering session" },
+      { "id": "teaching-skills", "label": "Teach movement technique to beginners effectively" },
+      { "id": "safeguarding", "label": "Understand safeguarding responsibilities" },
+      { "id": "cpd", "label": "Engage in continuing professional development" }
+    ]
+  }
+]

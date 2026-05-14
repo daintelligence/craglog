@@ -582,6 +582,13 @@ export default function ProfilePage() {
         <SectionTitle>Your Data</SectionTitle>
         <Card>
           <SettingRow
+            icon={Award}
+            label="Awards & Schemes"
+            sublabel="NICAS, NIBAS skill checklists"
+            onClick={() => router.push('/awards')}
+          />
+          <div className="divider mx-4" />
+          <SettingRow
             icon={BookOpen}
             label="Logbook"
             sublabel="All your logged ascents"

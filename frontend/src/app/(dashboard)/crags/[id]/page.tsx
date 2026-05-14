@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Mountain, MapPin, PlusCircle, Target, ChevronDown,
   ChevronUp, Car, Footprints, Info, Cloud, Wind, Droplets, Users,
-  Search, Filter,
+  Search, Star,
 } from 'lucide-react';
 import Link from 'next/link';
 import { cragsApi, projectsApi, ascentsApi } from '@/lib/api';
@@ -121,17 +121,43 @@ function ConditionsWidget({ cragId }: { cragId: string }) {
   );
 }
 
-const TICK_DOT: Record<string, { cls: string; title: string }> = {
-  onsight:  { cls: 'bg-summit-500',  title: 'Onsight' },
-  flash:    { cls: 'bg-summit-400',  title: 'Flash' },
-  redpoint: { cls: 'bg-amber-400',   title: 'Redpoint' },
-  attempt:  { cls: 'bg-stone-300 dark:bg-stone-600', title: 'Attempted' },
+const TICK_STARS: Record<string, { stars: number; label: string }> = {
+  onsight:   { stars: 3, label: 'Onsight' },
+  flash:     { stars: 3, label: 'Flash' },
+  solo:      { stars: 3, label: 'Solo' },
+  redpoint:  { stars: 2, label: 'Redpoint' },
+  pinkpoint: { stars: 2, label: 'Pinkpoint' },
+  repeat:    { stars: 2, label: 'Repeat' },
+  second:    { stars: 1, label: 'Second' },
+  abseil:    { stars: 1, label: 'Abseil' },
+  dog:       { stars: 0, label: 'Attempted' },
 };
 
-function TickDot({ style }: { style?: string }) {
-  if (!style) return <span className="w-2 h-2 shrink-0" />;
-  const { cls, title } = TICK_DOT[style] ?? TICK_DOT.attempt;
-  return <span className={cn('w-2 h-2 rounded-full shrink-0', cls)} title={title} />;
+function TickStars({ style }: { style?: string }) {
+  if (!style) return <span className="w-9 shrink-0" />;
+  const tick = TICK_STARS[style] ?? { stars: 0, label: 'Attempted' };
+  if (tick.stars === 0) {
+    return (
+      <span title={tick.label} className="w-9 shrink-0 flex items-center">
+        <span className="w-2 h-2 rounded-full bg-stone-300 dark:bg-stone-600" />
+      </span>
+    );
+  }
+  return (
+    <span title={tick.label} className="w-9 shrink-0 flex items-center gap-px">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Star
+          key={i}
+          className={cn(
+            'w-2.5 h-2.5 shrink-0',
+            i < tick.stars
+              ? 'fill-amber-400 text-amber-400'
+              : 'fill-transparent text-stone-200 dark:text-stone-700',
+          )}
+        />
+      ))}
+    </span>
+  );
 }
 
 function RouteRow({ route, cragId, tickStyle }: { route: Route; cragId: string; tickStyle?: string }) {
@@ -159,7 +185,7 @@ function RouteRow({ route, cragId, tickStyle }: { route: Route; cragId: string; 
 
   return (
     <div className="flex items-center gap-2 py-2.5 border-b border-stone-50 dark:border-stone-800 last:border-0">
-      <TickDot style={tickStyle} />
+      <TickStars style={tickStyle} />
       <GradeChip grade={route.grade} gradeSystem={route.gradeSystem} size="sm" />
       <div className="flex-1 min-w-0">
         <Link
@@ -406,9 +432,21 @@ export default function CragDetailPage() {
             </h2>
             {/* Tick legend */}
             {Object.keys(ticks).length > 0 && (
-              <div className="flex items-center gap-2 text-[10px] text-stone-400">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-summit-500 inline-block" />OS/Flash</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />RP</span>
+              <div className="flex items-center gap-2.5 text-[10px] text-stone-400">
+                <span className="flex items-center gap-0.5">
+                  {[0,1,2].map(i => <Star key={i} className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />)}
+                  <span className="ml-1">OS/Flash</span>
+                </span>
+                <span className="flex items-center gap-0.5">
+                  {[0,1].map(i => <Star key={i} className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />)}
+                  <Star className="w-2.5 h-2.5 fill-transparent text-stone-200 dark:text-stone-700" />
+                  <span className="ml-1">Lead</span>
+                </span>
+                <span className="flex items-center gap-0.5">
+                  <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                  {[0,1].map(i => <Star key={i} className="w-2.5 h-2.5 fill-transparent text-stone-200 dark:text-stone-700" />)}
+                  <span className="ml-1">2nd</span>
+                </span>
               </div>
             )}
           </div>

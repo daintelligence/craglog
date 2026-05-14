@@ -185,6 +185,14 @@ export const feedbackApi = {
   resolve: (id: string) => api.patch(`/feedback/${id}/resolve`).then((r) => r.data),
 };
 
+// ─── Awards (NICAS / NIBAS) ───────────────────────────────────────────────────
+export const awardsApi = {
+  definitions: () => api.get('/awards/definitions').then((r) => r.data),
+  myProgress: () => api.get('/awards/me').then((r) => r.data),
+  updateSkills: (awardType: string, skills: Record<string, boolean>) =>
+    api.patch(`/awards/me/${awardType}/skills`, { skills }).then((r) => r.data),
+};
+
 // ─── Export ───────────────────────────────────────────────────────────────────
 export const exportApi = {
   download: async (format: string, startDate?: string, endDate?: string) => {
