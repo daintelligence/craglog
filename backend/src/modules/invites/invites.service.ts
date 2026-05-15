@@ -4,14 +4,18 @@ import { Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { Invite } from './entities/invite.entity';
 import { CreateInviteDto } from './dto/create-invite.dto';
+import { MailService } from '../mail/mail.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class InvitesService {
   constructor(
     @InjectRepository(Invite) private repo: Repository<Invite>,
+    private mail: MailService,
+    private users: UsersService,
   ) {}
 
-  create(dto: CreateInviteDto, createdById: string): Promise<Invite> {
+  async create(dto: CreateInviteDto, createdById: string): Promise<Invite> {
     const invite = this.repo.create({
       token: randomUUID(),
       email: dto.email ?? null,
@@ -20,7 +24,14 @@ export class InvitesService {
       // 30-day expiry
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
-    return this.repo.save(invite);
+    const saved = await this.repo.save(invite);
+
+    if (dto.email) {
+      const inviter = await this.users.findById(createdById);
+      await this.mail.sendInvite(dto.email, inviter?.name ?? 'A friend', saved.token, dto.note ?? undefined);
+    }
+
+    return saved;
   }
 
   findAll(createdById: string): Promise<Invite[]> {

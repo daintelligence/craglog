@@ -9,11 +9,13 @@ import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UsersModule } from '../users/users.module';
 import { InvitesModule } from '../invites/invites.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
     UsersModule,
     InvitesModule,
+    MailModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

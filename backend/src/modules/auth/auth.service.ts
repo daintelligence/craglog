@@ -5,6 +5,7 @@ import { createHash, randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { InvitesService } from '../invites/invites.service';
+import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -15,6 +16,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private invitesService: InvitesService,
+    private mail: MailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -71,24 +73,7 @@ export class AuthService {
       resetTokenExpiry: expiry,
     });
 
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
-    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
-    const resendKey = this.configService.get<string>('RESEND_API_KEY');
-
-    if (resendKey) {
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from: 'CragLog <noreply@craglog.app>',
-          to: email,
-          subject: 'Reset your CragLog password',
-          html: `<p>Hi ${user.name},</p><p>Click below to reset your password. This link expires in 1 hour.</p><p><a href="${resetUrl}" style="background:#9c6b40;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Reset password</a></p><p>If you didn't request this, you can safely ignore this email.</p>`,
-        }),
-      });
-    } else {
-      console.log(`[DEV] Password reset link for ${email}: ${resetUrl}`);
-    }
+    await this.mail.sendPasswordReset(email, user.name, token);
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
