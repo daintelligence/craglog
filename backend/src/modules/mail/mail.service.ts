@@ -9,7 +9,7 @@ export class MailService {
 
   private get apiKey() { return this.config.get<string>('RESEND_API_KEY'); }
   private get frontendUrl() { return this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000'; }
-  private get from() { return 'CragLog <noreply@craglog.app>'; }
+  private get from() { return 'CragLog <noreply@craglog.cloud>'; }
 
   private async send(to: string, subject: string, html: string) {
     const key = this.apiKey;
