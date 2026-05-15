@@ -3,12 +3,14 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
   async rewrites() {
-    return [
-      {
-        source: '/api/((?!icon).*)',
-        destination: `${process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/$1`,
-      },
-    ];
+    return {
+      afterFiles: [
+        {
+          source: '/api/:path*',
+          destination: `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/:path*`,
+        },
+      ],
+    };
   },
   experimental: {
     optimizePackageImports: ['lucide-react', 'recharts'],
