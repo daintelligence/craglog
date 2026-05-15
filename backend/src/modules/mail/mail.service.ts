@@ -14,9 +14,10 @@ export class MailService {
   private async send(to: string, subject: string, html: string) {
     const key = this.apiKey;
     if (!key) {
-      this.logger.warn(`[DEV] Email to ${to} — ${subject}`);
+      this.logger.warn(`[MAIL] No RESEND_API_KEY set — skipping email to ${to} — ${subject}`);
       return;
     }
+    this.logger.log(`[MAIL] Sending "${subject}" to ${to}`);
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },

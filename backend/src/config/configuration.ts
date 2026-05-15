@@ -30,4 +30,6 @@ export default () => ({
   cors: {
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   },
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  FRONTEND_URL: process.env.FRONTEND_URL,
 });
