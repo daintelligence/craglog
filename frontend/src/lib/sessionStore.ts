@@ -100,6 +100,15 @@ export function setTheme(theme: 'light' | 'dark') {
 
 export type ColorTheme = 'rock' | 'alpine' | 'forest' | 'sandstone' | 'slate' | 'fuchsia';
 
+const THEME_COLOURS: Record<ColorTheme, string> = {
+  rock:      '#856440',
+  alpine:    '#2563eb',
+  forest:    '#16a34a',
+  sandstone: '#ea580c',
+  slate:     '#7c3aed',
+  fuchsia:   '#c026d3',
+};
+
 export function getColorTheme(): ColorTheme {
   if (typeof window === 'undefined') return 'rock';
   return (localStorage.getItem(KEYS.colorTheme) as ColorTheme) || 'rock';
@@ -109,6 +118,8 @@ export function setColorTheme(theme: ColorTheme) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(KEYS.colorTheme, theme);
   document.documentElement.setAttribute('data-theme', theme);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', THEME_COLOURS[theme]);
 }
 
 // ─── Onboarding ───────────────────────────────────────────────────────────────

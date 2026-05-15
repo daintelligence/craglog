@@ -47,9 +47,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Inline script applies colour+dark theme before first paint to avoid flash */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
+            var COLOURS={rock:'#856440',alpine:'#2563eb',forest:'#16a34a',sandstone:'#ea580c',slate:'#7c3aed',fuchsia:'#c026d3'};
             try {
               var ct = localStorage.getItem('craglog_color_theme');
-              if (ct) document.documentElement.setAttribute('data-theme', ct);
+              if (ct) {
+                document.documentElement.setAttribute('data-theme', ct);
+                var m = document.querySelector('meta[name="theme-color"]');
+                if (m && COLOURS[ct]) m.setAttribute('content', COLOURS[ct]);
+              }
               var t = localStorage.getItem('craglog_theme');
               if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches))
                 document.documentElement.classList.add('dark');

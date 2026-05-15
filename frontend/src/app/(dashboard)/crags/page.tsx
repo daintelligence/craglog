@@ -159,19 +159,6 @@ export default function CragsPage() {
         ))}
       </div>
 
-      {/* Map */}
-      <div className="h-[360px]">
-        <CragMap
-          crags={crags}
-          allCrags={mapPinsData}
-          userLat={lat}
-          userLng={lng}
-          selectedCragId={selected?.id}
-          onCragClick={setSelected}
-          height="360px"
-        />
-      </div>
-
       {/* Result count */}
       {!isLoading && crags.length > 0 && (
         <p className="text-xs text-stone-400 px-0.5">{crags.length} crags</p>
@@ -209,6 +196,19 @@ export default function CragsPage() {
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Map — below results so search is unobstructed */}
+      <div className="h-[320px]">
+        <CragMap
+          crags={crags}
+          allCrags={mapPinsData}
+          userLat={lat}
+          userLng={lng}
+          selectedCragId={selected?.id}
+          onCragClick={setSelected}
+          height="320px"
+        />
       </div>
     </div>
   );

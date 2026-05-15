@@ -311,7 +311,7 @@ export default function DashboardPage() {
             <Dumbbell className="w-6 h-6 text-amber-600 dark:text-amber-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-stone-900 dark:text-stone-50 text-sm">Gym session in progress</p>
+            <p className="font-bold text-stone-900 dark:text-stone-50 text-sm">Gym — today</p>
             <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
               {todayGym.length} {todayGym.length === 1 ? 'climb' : 'climbs'} ·{' '}
               {(() => {
