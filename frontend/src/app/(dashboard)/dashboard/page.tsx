@@ -19,61 +19,44 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
-// ── Activity heatmap ──────────────────────────────────────────────────────────
+// ── Activity chart (30 days) ──────────────────────────────────────────────────
 
-function heatLevel(count: number): string {
-  if (count === 0) return 'heat-0';
-  if (count === 1) return 'heat-1';
-  if (count === 2) return 'heat-2';
-  if (count <= 4) return 'heat-3';
-  return 'heat-4';
-}
-
-function ActivityHeatmap({ cells }: { cells: { date: string; count: number }[] }) {
-  const weeks: { date: string; count: number }[][] = [];
-  for (let i = 0; i < cells.length; i += 7) {
-    weeks.push(cells.slice(i, i + 7));
-  }
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const monthLabels: string[] = new Array(52).fill('');
-  for (let w = 0; w < weeks.length; w++) {
-    const first = weeks[w][0];
-    if (first) {
-      const d = new Date(first.date);
-      if (d.getDate() <= 7) monthLabels[w] = months[d.getMonth()];
-    }
-  }
+function ActivityChart({ cells }: { cells: { date: string; count: number }[] }) {
+  const last30 = cells.slice(-30).map((c) => ({
+    ...c,
+    label: new Date(c.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+    shortLabel: new Date(c.date).getDate() === 1
+      ? new Date(c.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+      : new Date(c.date).getDate().toString(),
+  }));
 
   return (
-    <div className="overflow-x-auto -mx-1">
-      <div className="inline-block min-w-full px-1">
-        <div className="flex gap-0.5 mb-0.5">
-          {monthLabels.map((m, i) => (
-            <div key={i} className="w-3 text-[8px] text-stone-400 dark:text-stone-600 shrink-0">{m}</div>
-          ))}
-        </div>
-        <div className="flex gap-0.5">
-          {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-0.5">
-              {week.map((cell, di) => (
-                <div
-                  key={di}
-                  title={`${cell.date}: ${cell.count} climb${cell.count !== 1 ? 's' : ''}`}
-                  className={cn('w-3 h-3 rounded-sm', cell.count === 0 ? 'heat-0' : heatLevel(cell.count))}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center gap-1 mt-2 text-[9px] text-stone-400 justify-end">
-          <span>Less</span>
-          {[0,1,2,3,4].map((l) => (
-            <div key={l} className={cn('w-2.5 h-2.5 rounded-sm', heatLevel(l))} />
-          ))}
-          <span>More</span>
-        </div>
-      </div>
-    </div>
+    <ResponsiveContainer width="100%" height={100}>
+      <BarChart data={last30} barSize={7} margin={{ top: 4, right: 0, left: -36, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e7e5e4" className="dark:opacity-20" />
+        <XAxis
+          dataKey="shortLabel"
+          tick={{ fontSize: 9, fill: '#a8a29e' }}
+          axisLine={false}
+          tickLine={false}
+          interval={4}
+        />
+        <YAxis
+          tick={{ fontSize: 9, fill: '#a8a29e' }}
+          axisLine={false}
+          tickLine={false}
+          allowDecimals={false}
+          width={34}
+        />
+        <Tooltip
+          cursor={{ fill: 'rgba(109,80,53,0.06)' }}
+          contentStyle={{ borderRadius: 10, border: '1px solid #e7e5e4', fontSize: 11, padding: '4px 8px' }}
+          labelFormatter={(_: any, payload: any) => payload?.[0]?.payload?.label ?? ''}
+          formatter={(val: number) => [val, val === 1 ? 'climb' : 'climbs']}
+        />
+        <Bar dataKey="count" fill="var(--color-rock-600, #6d5035)" radius={[3, 3, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
   );
 }
 
@@ -397,13 +380,15 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── Activity heatmap ──────────────────────────────────────────── */}
+      {/* ── Activity — last 30 days ───────────────────────────────────── */}
       <div className="card p-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-stone-900 dark:text-stone-100 text-sm">Activity — 52 weeks</h2>
-          <span className="text-xs text-stone-400">{heatmapCells.filter(c => c.count > 0).length} days out</span>
+          <h2 className="font-bold text-stone-900 dark:text-stone-100 text-sm">Activity — 30 days</h2>
+          <span className="text-xs text-stone-400">
+            {heatmapCells.slice(-30).reduce((s, c) => s + c.count, 0)} climbs
+          </span>
         </div>
-        <ActivityHeatmap cells={heatmapCells} />
+        <ActivityChart cells={heatmapCells} />
       </div>
 
       {/* ── Grade pyramid ─────────────────────────────────────────────── */}

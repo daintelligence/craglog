@@ -552,28 +552,10 @@ export default function ProfilePage() {
         <Card>
           <SettingRow
             icon={isDark ? Moon : Sun}
-            label="Dark Mode"
-            sublabel={isDark ? 'On' : 'Off'}
-            onClick={toggle}
-            right={
-              <div
-                className={cn(
-                  'w-12 h-6.5 rounded-full transition-colors relative shrink-0',
-                  isDark ? 'bg-rock-600' : 'bg-stone-200 dark:bg-stone-700',
-                )}
-                style={{ height: 26 }}
-              >
-                <div
-                  className={cn(
-                    'absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform',
-                    isDark ? 'translate-x-6' : 'translate-x-0.5',
-                  )}
-                />
-              </div>
-            }
+            label="Theme & Colours"
+            sublabel={`${isDark ? 'Dark' : 'Light'} · ${colorTheme.charAt(0).toUpperCase() + colorTheme.slice(1)}`}
+            onClick={() => router.push('/settings')}
           />
-          <div className="divider mx-4" />
-          <ThemePicker current={colorTheme} onChange={changeTheme} />
         </Card>
       </div>
 

@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, PlusCircle, Map, BookOpen, UserCircle, Mountain,
-  Wifi, WifiOff, RefreshCw, Download, X, Dumbbell,
+  Wifi, WifiOff, RefreshCw, Download, X, Dumbbell, Settings,
 } from 'lucide-react';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -68,6 +68,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
 
           <div className="flex items-center gap-2">
+            <Link href="/settings" className={cn(
+              'p-2 rounded-xl transition-colors',
+              pathname === '/settings'
+                ? 'text-rock-600 bg-rock-50 dark:bg-rock-900/30'
+                : 'text-stone-400 hover:text-stone-600 dark:hover:text-stone-300',
+            )}>
+              <Settings className="w-5 h-5" />
+            </Link>
             {!isOnline && (
               <div className="flex items-center gap-1.5 text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-2.5 py-1.5 rounded-full font-medium">
                 <WifiOff className="w-3 h-3" />

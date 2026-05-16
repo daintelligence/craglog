@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ascentsApi, badgesApi } from '@/lib/api';
 import { today } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, ChevronUp, ChevronDown, Dumbbell, Trash2, Award, Calendar, MessageSquare, Check, X } from 'lucide-react';
+import { CheckCircle2, ChevronUp, ChevronDown, Dumbbell, Trash2, Award, Calendar, MessageSquare, Check, X, Zap } from 'lucide-react';
 
 // ── grades ────────────────────────────────────────────────────────────────────
 
@@ -13,12 +13,43 @@ const VGRADES = ['VB','V0','V0+','V1','V2','V3','V4','V5','V6','V7','V8','V9','V
 
 type Style = 'lead' | 'toprope' | 'autobelay' | 'boulder';
 type GradeSystem = 'rope' | 'boulder';
+type Result = 'flash' | 'redpoint' | 'dog';
 
 const STYLES: { value: Style; label: string; short: string; colour: string; system: GradeSystem }[] = [
   { value: 'lead',      label: 'Lead',      short: 'Lead', colour: 'bg-rock-600 active:bg-rock-700 shadow-rock-200 dark:shadow-rock-900',       system: 'rope'    },
   { value: 'toprope',   label: 'Top rope',  short: 'Top',  colour: 'bg-summit-600 active:bg-summit-700 shadow-summit-200 dark:shadow-summit-900', system: 'rope'    },
   { value: 'autobelay', label: 'Autobelay', short: 'Auto', colour: 'bg-sky-600 active:bg-sky-700 shadow-sky-200 dark:shadow-sky-900',             system: 'rope'    },
   { value: 'boulder',   label: 'Boulder',   short: 'Bldr', colour: 'bg-amber-600 active:bg-amber-700 shadow-amber-200 dark:shadow-amber-900',     system: 'boulder' },
+];
+
+const RESULTS: { value: Result; label: string; sub: string; icon: React.ReactNode; bg: string; border: string; text: string }[] = [
+  {
+    value: 'flash',
+    label: 'Flash',
+    sub: 'First go',
+    icon: <Zap className="w-7 h-7" />,
+    bg: 'bg-amber-50 dark:bg-amber-900/20',
+    border: 'border-amber-300 dark:border-amber-600',
+    text: 'text-amber-600 dark:text-amber-400',
+  },
+  {
+    value: 'redpoint',
+    label: 'Sent it',
+    sub: 'Completed',
+    icon: <Check className="w-7 h-7" />,
+    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+    border: 'border-emerald-300 dark:border-emerald-600',
+    text: 'text-emerald-600 dark:text-emerald-400',
+  },
+  {
+    value: 'dog',
+    label: 'Attempt',
+    sub: "Didn't finish",
+    icon: <X className="w-7 h-7" />,
+    bg: 'bg-stone-50 dark:bg-stone-800',
+    border: 'border-stone-200 dark:border-stone-600',
+    text: 'text-stone-500 dark:text-stone-400',
+  },
 ];
 
 // ── drum picker ───────────────────────────────────────────────────────────────
@@ -75,10 +106,8 @@ function GradeDrum({ grades, value, onChange }: {
       </button>
 
       <div className="relative w-40 overflow-hidden" style={{ height: ITEM_H * 3 }}>
-        {/* Selection box sits below the scroll list */}
         <div className="absolute inset-x-0 rounded-2xl bg-rock-50 dark:bg-rock-900/30 border-2 border-rock-400 dark:border-rock-500 pointer-events-none z-0"
           style={{ top: ITEM_H, height: ITEM_H }} />
-        {/* Fade gradients sit above the scroll list to soften non-selected items */}
         <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white dark:from-stone-950 to-transparent pointer-events-none z-20" />
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white dark:from-stone-950 to-transparent pointer-events-none z-20" />
         <div
@@ -152,6 +181,7 @@ export default function GymPage() {
   const [ropeGrade,    setRopeGrade]    = useState('6b');
   const [boulderGrade, setBoulderGrade] = useState('V3');
   const [activeStyle,  setActiveStyle]  = useState<Style>('lead');
+  const [pendingStyle, setPendingStyle] = useState<Style | null>(null);
   const [gradeSystem,  setGradeSystem]  = useState<GradeSystem>('rope');
   const [flash,        setFlash]        = useState<Style | null>(null);
   const [busy,         setBusy]         = useState(false);
@@ -216,20 +246,40 @@ export default function GymPage() {
     swipeOrigin.current = null;
     if (Math.abs(dx) < 50 || dy > Math.abs(dx)) return;
     setGradeSystem(dx < 0 ? 'boulder' : 'rope');
+    setPendingStyle(null);
   }
 
-  async function log(style: Style, ascentType: 'redpoint' | 'dog' = 'redpoint') {
-    if (busy) return;
-    const newSystem = STYLES.find((s) => s.value === style)!.system;
-    setActiveStyle(style);
-    setGradeSystem(newSystem);
-    if (newSystem !== gradeSystem) return;
+  function handleStyleTap(style: Style) {
+    const styleInfo = STYLES.find((s) => s.value === style)!;
+    const newSystem = styleInfo.system;
 
+    // Switching grade system — update system and clear pending
+    if (newSystem !== gradeSystem) {
+      setGradeSystem(newSystem);
+      setActiveStyle(style);
+      setPendingStyle(null);
+      return;
+    }
+
+    // Tapping already-pending style cancels it
+    if (pendingStyle === style) {
+      setPendingStyle(null);
+      return;
+    }
+
+    setActiveStyle(style);
+    setPendingStyle(style);
+  }
+
+  async function logResult(result: Result) {
+    if (!pendingStyle || busy) return;
+    const style = pendingStyle;
+    setPendingStyle(null);
     setBusy(true);
     setFlash(style);
-    const logGrade = newSystem === 'boulder' ? boulderGrade : ropeGrade;
+    const logGrade = gradeSystem === 'boulder' ? boulderGrade : ropeGrade;
     try {
-      await ascentsApi.gymLog({ grade: logGrade, style, date: sessionDate, ascentType });
+      await ascentsApi.gymLog({ grade: logGrade, style, date: sessionDate, ascentType: result });
       qc.invalidateQueries({ queryKey: ['ascents-gym-today'] });
       qc.invalidateQueries({ queryKey: ['ascents'] });
       qc.invalidateQueries({ queryKey: ['stats'] });
@@ -258,6 +308,8 @@ export default function GymPage() {
     return acc;
   }, {});
 
+  const pendingStyleInfo = STYLES.find((s) => s.value === pendingStyle);
+
   return (
     <div className="flex flex-col items-center gap-5 pt-1 pb-6 min-h-[calc(100vh-160px)]">
 
@@ -268,14 +320,13 @@ export default function GymPage() {
           <h1 className="text-xl font-bold text-stone-900 dark:text-stone-50">Gym session</h1>
         </div>
 
-        {/* Date picker */}
         <div className="flex items-center justify-center gap-2">
           <Calendar className="w-3.5 h-3.5 text-stone-400" />
           <input
             type="date"
             value={sessionDate}
             max={today()}
-            onChange={(e) => setSessionDate(e.target.value)}
+            onChange={(e) => { setSessionDate(e.target.value); setPendingStyle(null); }}
             className="text-xs text-stone-500 dark:text-stone-400 bg-transparent border-none outline-none cursor-pointer"
           />
         </div>
@@ -291,7 +342,7 @@ export default function GymPage() {
             </span>
           </div>
         ) : (
-          <p className="text-sm text-stone-400">Scroll grade · swipe for V · tap style to log</p>
+          <p className="text-sm text-stone-400">Pick a grade · tap a style · choose your result</p>
         )}
       </div>
 
@@ -301,12 +352,11 @@ export default function GymPage() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {/* Rope / Boulder pill */}
         <div className="flex bg-stone-100 dark:bg-stone-800 rounded-full p-1 gap-1">
           {(['rope', 'boulder'] as const).map((sys) => (
             <button
               key={sys}
-              onClick={() => setGradeSystem(sys)}
+              onClick={() => { setGradeSystem(sys); setPendingStyle(null); }}
               className={cn(
                 'px-5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200',
                 gradeSystem === sys
@@ -319,15 +369,14 @@ export default function GymPage() {
           ))}
         </div>
 
-        <GradeDrum grades={grades} value={grade} onChange={setGrade} />
+        <GradeDrum grades={grades} value={grade} onChange={(g) => { setGrade(g); setPendingStyle(null); }} />
 
-        {/* Quick-grade chips */}
         {quickGrades.length > 0 && (
           <div className="flex gap-2 flex-wrap justify-center">
             {quickGrades.map((g) => (
               <button
                 key={g}
-                onClick={() => setGrade(g)}
+                onClick={() => { setGrade(g); setPendingStyle(null); }}
                 className={cn(
                   'px-3 py-1 rounded-full text-sm font-bold border-2 transition-all',
                   grade === g
@@ -345,22 +394,25 @@ export default function GymPage() {
       {/* Style buttons — 2×2 grid */}
       <div className="w-full grid grid-cols-2 gap-3 px-1">
         {STYLES.map((s) => {
-          const isActive = activeStyle === s.value;
+          const isPending = pendingStyle === s.value;
+          const isActive  = activeStyle === s.value && !pendingStyle;
           return (
             <div key={s.value} className="relative">
               <button
-                onClick={() => log(s.value)}
-                disabled={busy && flash === s.value}
+                onClick={() => handleStyleTap(s.value)}
+                disabled={busy}
                 className={cn(
                   'w-full h-[88px] rounded-2xl text-white font-bold shadow-lg',
                   'transition-all duration-150 active:scale-95',
                   'flex flex-col items-center justify-center gap-1',
                   s.colour,
-                  isActive && 'ring-4 ring-white/60 scale-[1.03]',
+                  isPending && 'ring-4 ring-white/80 scale-[1.04]',
+                  isActive && 'ring-2 ring-white/40',
+                  pendingStyle && !isPending && 'opacity-40',
                 )}
               >
                 <span className="text-3xl font-black leading-none">{s.short}</span>
-                <span className="text-xs font-medium opacity-80">{s.label}</span>
+                <span className="text-xs font-medium opacity-80">{isPending ? 'tap again to cancel' : s.label}</span>
               </button>
 
               <div className={cn(
@@ -375,22 +427,35 @@ export default function GymPage() {
         })}
       </div>
 
-      {/* Attempt row — log a fall/hang without counting as a send */}
-      <div className="w-full grid grid-cols-4 gap-2 px-1">
-        {STYLES.map((s) => (
-          <button
-            key={s.value}
-            onClick={() => log(s.value, 'dog')}
-            disabled={busy}
-            className="py-2 rounded-xl border-2 border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 text-xs font-semibold hover:border-stone-300 active:scale-95 transition-all"
-          >
-            {s.short} fall
-          </button>
-        ))}
-      </div>
+      {/* Result picker — appears after style is chosen */}
+      {pendingStyle && pendingStyleInfo && (
+        <div className="w-full space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <p className="text-center text-sm font-semibold text-stone-500 dark:text-stone-400">
+            {grade} {pendingStyleInfo.label} — how did it go?
+          </p>
+          <div className="grid grid-cols-3 gap-3 px-1">
+            {RESULTS.map((r) => (
+              <button
+                key={r.value}
+                onClick={() => logResult(r.value)}
+                disabled={busy}
+                className={cn(
+                  'flex flex-col items-center gap-2 py-5 rounded-2xl border-2',
+                  'active:scale-95 transition-all duration-150',
+                  r.bg, r.border,
+                )}
+              >
+                <span className={cn(r.text)}>{r.icon}</span>
+                <span className={cn('text-sm font-bold', r.text)}>{r.label}</span>
+                <span className="text-xs text-stone-400">{r.sub}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Undo */}
-      {sessionCount > 0 && (
+      {sessionCount > 0 && !pendingStyle && (
         <button onClick={undoLast} className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-red-500 transition-colors">
           <Trash2 className="w-3.5 h-3.5" />
           Undo last
@@ -403,46 +468,57 @@ export default function GymPage() {
           <p className="text-xs font-bold text-stone-400 uppercase tracking-wide">
             {sessionDate === today() ? 'Today' : sessionDate}
           </p>
-          {[...todayAscents].reverse().slice(0, 10).map((a: any) => (
-            <div key={a.id} className="card px-4 py-2.5">
-              <div className="flex items-center gap-3">
-                <span className="font-black text-xl text-rock-600 w-14">{a.freeGrade}</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm text-stone-600 dark:text-stone-400 capitalize">
-                    {a.gymStyle === 'toprope' ? 'Top rope' : a.gymStyle}
-                    {a.ascentType === 'dog' && <span className="ml-1.5 text-xs text-amber-500 font-semibold">attempt</span>}
-                  </span>
-                  {a.notes && editNoteId !== a.id && (
-                    <p className="text-xs text-stone-400 truncate">{a.notes}</p>
-                  )}
+          {[...todayAscents].reverse().slice(0, 10).map((a: any) => {
+            const resultLabel =
+              a.ascentType === 'flash' ? '⚡ Flash' :
+              a.ascentType === 'dog'   ? 'Attempt' :
+              'Sent';
+            const resultColour =
+              a.ascentType === 'flash' ? 'text-amber-500' :
+              a.ascentType === 'dog'   ? 'text-stone-400' :
+              'text-emerald-500';
+            return (
+              <div key={a.id} className="card px-4 py-2.5">
+                <div className="flex items-center gap-3">
+                  <span className="font-black text-xl text-rock-600 w-14">{a.freeGrade}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-stone-600 dark:text-stone-400 capitalize">
+                        {a.gymStyle === 'toprope' ? 'Top rope' : a.gymStyle}
+                      </span>
+                      <span className={cn('text-xs font-semibold', resultColour)}>{resultLabel}</span>
+                    </div>
+                    {a.notes && editNoteId !== a.id && (
+                      <p className="text-xs text-stone-400 truncate">{a.notes}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => { setEditNoteId(a.id); setNoteText(a.notes || ''); }}
+                    className="p-1.5 text-stone-300 hover:text-rock-500 transition-colors shrink-0"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => { setEditNoteId(a.id); setNoteText(a.notes || ''); }}
-                  className="p-1.5 text-stone-300 hover:text-rock-500 transition-colors shrink-0"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                </button>
+                {editNoteId === a.id && (
+                  <div className="mt-2 flex gap-2 items-center">
+                    <input
+                      autoFocus
+                      value={noteText}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveNote(a.id)}
+                      placeholder="Add a note…"
+                      className="flex-1 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl px-3 py-2 outline-none focus:border-rock-400"
+                    />
+                    <button onClick={() => saveNote(a.id)} className="p-1.5 text-emerald-500"><Check className="w-4 h-4" /></button>
+                    <button onClick={() => setEditNoteId(null)} className="p-1.5 text-stone-400"><X className="w-4 h-4" /></button>
+                  </div>
+                )}
               </div>
-              {editNoteId === a.id && (
-                <div className="mt-2 flex gap-2 items-center">
-                  <input
-                    autoFocus
-                    value={noteText}
-                    onChange={(e) => setNoteText(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && saveNote(a.id)}
-                    placeholder="Add a note…"
-                    className="flex-1 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl px-3 py-2 outline-none focus:border-rock-400"
-                  />
-                  <button onClick={() => saveNote(a.id)} className="p-1.5 text-emerald-500"><Check className="w-4 h-4" /></button>
-                  <button onClick={() => setEditNoteId(null)} className="p-1.5 text-stone-400"><X className="w-4 h-4" /></button>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Badge unlock toast */}
       {toastBadge && (
         <BadgeToast badge={toastBadge} onDone={() => setToastBadge(null)} />
       )}
