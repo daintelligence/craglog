@@ -32,7 +32,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 export default function SettingsPage() {
   const { isDark, toggle } = useDarkMode();
-  const { colorTheme, setColorTheme } = useColorTheme();
+  const { colorTheme, changeTheme: setColorTheme } = useColorTheme();
 
   return (
     <div className="space-y-6 pb-4">
