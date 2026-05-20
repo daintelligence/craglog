@@ -5,9 +5,9 @@ export const validationSchema = Joi.object({
   PORT: Joi.number().default(3001),
   DATABASE_URL: Joi.string().uri().required(),
   JWT_SECRET: Joi.string().min(32).required(),
-  JWT_EXPIRES_IN: Joi.string().default('15m'),
+  JWT_EXPIRES_IN: Joi.string().default('7d'),
   JWT_REFRESH_SECRET: Joi.string().min(32).required(),
-  JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
+  JWT_REFRESH_EXPIRES_IN: Joi.string().default('30d'),
   CORS_ORIGIN: Joi.string().default('http://localhost:3000'),
   REDIS_URL: Joi.string().optional(),
 });
@@ -23,9 +23,9 @@ export default () => ({
   },
   jwt: {
     secret: process.env.JWT_SECRET,
-    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     refreshSecret: process.env.JWT_REFRESH_SECRET,
-    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   },
   cors: {
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',

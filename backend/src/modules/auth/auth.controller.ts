@@ -16,7 +16,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 
 const REFRESH_COOKIE = 'craglog_refresh';
-const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 @ApiTags('auth')
 @Controller('auth')
