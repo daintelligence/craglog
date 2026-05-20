@@ -1,10 +1,12 @@
 'use client';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ascentsApi, badgesApi } from '@/lib/api';
+import { ascentsApi } from '@/lib/api';
+import { BadgeCelebration, type EarnedBadge } from '@/components/BadgeCelebration';
+import { ShareModal, type ShareData } from '@/components/ShareModal';
 import { today } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, ChevronUp, ChevronDown, Dumbbell, Trash2, Award, Calendar, MessageSquare, Check, X, Zap } from 'lucide-react';
+import { CheckCircle2, ChevronUp, ChevronDown, Dumbbell, Trash2, Calendar, MessageSquare, Check, X, Zap, Share2 } from 'lucide-react';
 
 // ── grades ────────────────────────────────────────────────────────────────────
 
@@ -143,35 +145,6 @@ function GradeDrum({ grades, value, onChange }: {
   );
 }
 
-// ── badge toast ───────────────────────────────────────────────────────────────
-
-const BADGE_ICONS: Record<string, string> = {
-  mountain: '⛰️', trophy: '🏆', gear: '⚙️', bolt: '⚡', eye: '👁️',
-  map: '🗺️', star: '⭐', flame: '🔥', layers: '📚', shuffle: '🔀',
-  zap: '⚡', 'map-pin': '📍', list: '📋', default: '🏅',
-};
-
-function BadgeToast({ badge, onDone }: { badge: any; onDone: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onDone, 4000);
-    return () => clearTimeout(t);
-  }, [onDone]);
-
-  return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[2000] animate-slide-up">
-      <div className="bg-stone-900 dark:bg-stone-800 text-white rounded-2xl px-5 py-3.5 shadow-2xl flex items-center gap-3 min-w-[220px]">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-xl shrink-0">
-          {BADGE_ICONS[badge.icon] || BADGE_ICONS.default}
-        </div>
-        <div>
-          <p className="text-xs text-stone-400 font-medium">Badge unlocked!</p>
-          <p className="font-bold text-sm leading-tight">{badge.name}</p>
-        </div>
-        <Award className="w-4 h-4 text-amber-400 shrink-0" />
-      </div>
-    </div>
-  );
-}
 
 // ── main ──────────────────────────────────────────────────────────────────────
 
@@ -183,10 +156,11 @@ export default function GymPage() {
   const [activeStyle,  setActiveStyle]  = useState<Style>('lead');
   const [pendingStyle, setPendingStyle] = useState<Style | null>(null);
   const [gradeSystem,  setGradeSystem]  = useState<GradeSystem>('rope');
-  const [flash,        setFlash]        = useState<Style | null>(null);
-  const [busy,         setBusy]         = useState(false);
-  const [toastBadge,   setToastBadge]   = useState<any | null>(null);
-  const [sessionDate,  setSessionDate]  = useState(today());
+  const [flash,            setFlash]            = useState<Style | null>(null);
+  const [busy,             setBusy]             = useState(false);
+  const [celebrationBadges,setCelebrationBadges] = useState<EarnedBadge[]>([]);
+  const [shareData,        setShareData]        = useState<ShareData | null>(null);
+  const [sessionDate,      setSessionDate]      = useState(today());
   const [editNoteId,   setEditNoteId]   = useState<string | null>(null);
   const [noteText,     setNoteText]     = useState('');
 
@@ -202,24 +176,6 @@ export default function GymPage() {
   const todayAscents = raw as any[];
   const sessionCount = todayAscents.length;
 
-  // Badge detection
-  const prevBadgeCountRef = useRef<number | null>(null);
-  const { data: earnedBadges = [] } = useQuery({
-    queryKey: ['badges', 'mine'],
-    queryFn: badgesApi.mine,
-    refetchInterval: 8000,
-  });
-  useEffect(() => {
-    if (prevBadgeCountRef.current === null) {
-      prevBadgeCountRef.current = earnedBadges.length;
-      return;
-    }
-    if (earnedBadges.length > prevBadgeCountRef.current) {
-      const newBadge = earnedBadges[earnedBadges.length - 1];
-      setToastBadge(newBadge?.badge ?? newBadge);
-    }
-    prevBadgeCountRef.current = earnedBadges.length;
-  }, [earnedBadges]);
 
   // Quick-grade chips — most-logged grades this session
   const quickGrades = useMemo(() => {
@@ -279,7 +235,8 @@ export default function GymPage() {
     setFlash(style);
     const logGrade = gradeSystem === 'boulder' ? boulderGrade : ropeGrade;
     try {
-      await ascentsApi.gymLog({ grade: logGrade, style, date: sessionDate, ascentType: result });
+      const data = await ascentsApi.gymLog({ grade: logGrade, style, date: sessionDate, ascentType: result });
+      if (data?.newBadges?.length) setCelebrationBadges(data.newBadges);
       qc.invalidateQueries({ queryKey: ['ascents-gym-today'] });
       qc.invalidateQueries({ queryKey: ['ascents'] });
       qc.invalidateQueries({ queryKey: ['stats'] });
@@ -313,6 +270,15 @@ export default function GymPage() {
   return (
     <div className="flex flex-col items-center gap-5 pt-1 pb-6 min-h-[calc(100vh-160px)]">
 
+      {celebrationBadges.length > 0 && (
+        <BadgeCelebration
+          badges={celebrationBadges}
+          onDismiss={() => setCelebrationBadges([])}
+          onShare={(b) => { setCelebrationBadges([]); setShareData({ type: 'badge', badge: b }); }}
+        />
+      )}
+      {shareData && <ShareModal data={shareData} onClose={() => setShareData(null)} />}
+
       {/* Header */}
       <div className="w-full text-center space-y-1.5">
         <div className="flex items-center justify-center gap-2">
@@ -340,6 +306,18 @@ export default function GymPage() {
                 .map((s) => `${byStyle[s.value]} ${s.short.toLowerCase()}`)
                 .join(' · ')}
             </span>
+            <button
+              onClick={() => {
+                const sends = todayAscents.filter((a: any) => a.ascentType !== 'dog');
+                const topGrade = sends.map((a: any) => a.freeGrade).filter(Boolean).sort().at(-1) ?? '';
+                const flashes = todayAscents.filter((a: any) => a.ascentType === 'flash').length;
+                setShareData({ type: 'session', cragName: 'Gym', routeCount: sessionCount, topGrade, flashes, date: sessionDate });
+              }}
+              className="p-1.5 rounded-full text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+              title="Share session"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
           </div>
         ) : (
           <p className="text-sm text-stone-400">Pick a grade · tap a style · choose your result</p>
@@ -519,9 +497,6 @@ export default function GymPage() {
         </div>
       )}
 
-      {toastBadge && (
-        <BadgeToast badge={toastBadge} onDone={() => setToastBadge(null)} />
-      )}
     </div>
   );
 }

@@ -16,10 +16,12 @@ import type { Crag, Buttress, Route, AscentType, ClimbingType, CreateAscentPaylo
 import { ASCENT_TYPE_LABELS, UK_TRAD_GRADES, FRENCH_GRADES } from '@/types';
 import {
   MapPin, Navigation, Search, Check, ChevronRight, RotateCcw, Star, Loader2,
-  Heart, Clock, Zap, Filter, X, PlusCircle, Mountain,
+  Heart, Clock, Zap, Filter, X, PlusCircle, Mountain, Share2,
 } from 'lucide-react';
 import { SkeletonList } from '@/components/Skeleton';
 import { cn } from '@/lib/utils';
+import { BadgeCelebration, type EarnedBadge } from '@/components/BadgeCelebration';
+import { ShareModal, type ShareData } from '@/components/ShareModal';
 
 type Step = 'crag' | 'buttress' | 'route' | 'style' | 'done';
 
@@ -56,7 +58,8 @@ function LogPageInner() {
   const [starRating, setStarRating]       = useState(0);
   const [cragSearch, setCragSearch]       = useState('');
   const [routeSearch, setRouteSearch]     = useState('');
-  const [newBadges, setNewBadges]         = useState<any[]>([]);
+  const [newBadges, setNewBadges]         = useState<EarnedBadge[]>([]);
+  const [shareData, setShareData]         = useState<ShareData | null>(null);
   const [savedOffline, setSavedOffline]   = useState(false);
   const [freeRouteName, setFreeRouteName] = useState('');
   const [freeGrade, setFreeGrade]         = useState('');
@@ -224,6 +227,14 @@ function LogPageInner() {
   if (step === 'done') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[55vh] text-center gap-5 px-4 animate-fade-in">
+        {newBadges.length > 0 && (
+          <BadgeCelebration
+            badges={newBadges}
+            onDismiss={() => setNewBadges([])}
+            onShare={(b) => { setNewBadges([]); setShareData({ type: 'badge', badge: b }); }}
+          />
+        )}
+        {shareData && <ShareModal data={shareData} onClose={() => setShareData(null)} />}
         <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center animate-bounce-in">
           <Check className="w-10 h-10 text-emerald-600" />
         </div>
@@ -246,21 +257,20 @@ function LogPageInner() {
           )}
         </div>
 
-        {newBadges.length > 0 && (
-          <div className="card p-5 w-full max-w-sm">
-            <p className="text-sm font-bold text-stone-700 dark:text-stone-300 mb-3">🏅 New badge{newBadges.length > 1 ? 's' : ''} earned!</p>
-            <div className="flex flex-wrap gap-3 justify-center">
-              {newBadges.map((b) => (
-                <div key={b.id} className="animate-badge-pop flex flex-col items-center gap-1">
-                  <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-md">
-                    {b.icon || '🏅'}
-                  </div>
-                  <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">{b.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Share this ascent */}
+        <button
+          onClick={() => setShareData({
+            type: 'ascent',
+            routeName: showFreeForm ? freeRouteName : (selectedRoute?.name ?? ''),
+            grade: showFreeForm ? freeGrade : (selectedRoute?.grade ?? ''),
+            ascentType,
+            cragName: selectedCrag?.name ?? '',
+            date,
+          })}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+        >
+          <Share2 className="w-4 h-4" /> Share this climb
+        </button>
 
         {/* Session summary — shows after 2+ routes */}
         {sessionLog.length >= 2 && (() => {
@@ -309,6 +319,16 @@ function LogPageInner() {
                   </div>
                 ))}
               </div>
+              <button
+                onClick={() => {
+                  const onsights = sessionLog.filter((r) => r.ascentType === 'onsight').length;
+                  const topGrade = [...sessionLog].sort((a, b) => (b.grade > a.grade ? 1 : -1))[0]?.grade ?? '';
+                  setShareData({ type: 'session', cragName: sessionCrag?.name ?? selectedCrag?.name ?? 'the crag', routeCount: sessionLog.length, topGrade, flashes: onsights, date });
+                }}
+                className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+              >
+                <Share2 className="w-3.5 h-3.5" /> Share session
+              </button>
             </div>
           );
         })()}

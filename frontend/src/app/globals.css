@@ -285,6 +285,18 @@
   .dark .heat-4 { @apply bg-emerald-300; }
 }
 
+/* Confetti animation */
+@keyframes confetti-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+.confetti-piece {
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
 /* Leaflet */
 .leaflet-container {
   @apply rounded-2xl;
