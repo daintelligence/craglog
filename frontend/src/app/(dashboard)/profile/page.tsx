@@ -6,7 +6,9 @@ import {
   User as UserIcon, Sun, Moon, ChevronRight, Download, LogOut,
   Award, Mountain, Calendar, TrendingUp, Edit2, Lock, Check,
   X, Eye, EyeOff, Star, Shield, MessageSquare, UserPlus, BookOpen,
+  Share2, Globe,
 } from 'lucide-react';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import { BadgeShield, TIER_ORDER, TIER_LABEL as SHIELD_TIER_LABEL } from '@/components/BadgeShield';
 import { authApi, usersApi, statsApi, badgesApi, exportApi, getErrorMessage } from '@/lib/api';
 import { clearAuth, getStoredUser, saveAuth } from '@/lib/auth';
@@ -156,10 +158,18 @@ function EditProfileSheet({
   const qc = useQueryClient();
   const [name, setName] = useState(user.name);
   const [bio, setBio] = useState(user.bio || '');
+  const [username, setUsername] = useState(user.username || '');
+  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || '');
+  const [isPublic, setIsPublic] = useState(user.isPublic !== false);
   const [error, setError] = useState('');
 
   const mut = useMutation({
-    mutationFn: () => usersApi.updateProfile({ name: name.trim(), bio: bio.trim() }),
+    mutationFn: () => usersApi.updateProfile({
+      name: name.trim(),
+      bio: bio.trim(),
+      username: username.trim() || undefined,
+      isPublic,
+    }),
     onSuccess: (updated: User) => {
       const stored = getStoredUser();
       if (stored) saveAuth(localStorage.getItem('craglog_token')!, { ...stored, ...updated });
@@ -169,6 +179,11 @@ function EditProfileSheet({
     onError: (e) => setError(getErrorMessage(e)),
   });
 
+  const patchAvatar = (url: string) => {
+    setAvatarUrl(url);
+    qc.setQueryData(['me'], (old: User | undefined) => old ? { ...old, avatarUrl: url } : old);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -176,14 +191,32 @@ function EditProfileSheet({
         <div className="w-10 h-1 bg-stone-200 dark:bg-stone-700 rounded-full mx-auto mb-2" />
         <h3 className="text-lg font-bold text-stone-900 dark:text-stone-50">Edit Profile</h3>
 
+        <div className="flex justify-center">
+          <AvatarUpload
+            name={name || 'Me'}
+            avatarUrl={avatarUrl}
+            size="lg"
+            onUploaded={patchAvatar}
+          />
+        </div>
+
         <div className="space-y-1">
           <label className="label">Name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full input"
-            placeholder="Your name"
-          />
+          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full input" placeholder="Your name" />
+        </div>
+
+        <div className="space-y-1">
+          <label className="label">Username</label>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-medium text-sm">@</span>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value.replace(/[^a-z0-9_]/gi, '').toLowerCase())}
+              className="w-full input pl-8"
+              placeholder="your_username"
+            />
+          </div>
+          <p className="text-xs text-stone-400">Used for your public profile URL: /u/{username || 'you'}</p>
         </div>
 
         <div className="space-y-1">
@@ -196,6 +229,27 @@ function EditProfileSheet({
             placeholder="A few words about your climbing…"
           />
         </div>
+
+        <button
+          type="button"
+          onClick={() => setIsPublic((p) => !p)}
+          className="w-full flex items-center gap-3 p-3.5 rounded-2xl border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+        >
+          <div className={cn('w-8 h-8 rounded-xl flex items-center justify-center shrink-0', isPublic ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-stone-100 dark:bg-stone-800')}>
+            <Globe className={cn('w-4 h-4', isPublic ? 'text-emerald-600' : 'text-stone-400')} />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-sm font-medium text-stone-900 dark:text-stone-50">
+              {isPublic ? 'Public profile' : 'Private profile'}
+            </div>
+            <div className="text-xs text-stone-400">
+              {isPublic ? 'Anyone with your link can view your stats' : 'Only you can see your profile'}
+            </div>
+          </div>
+          <div className={cn('w-10 h-6 rounded-full transition-colors', isPublic ? 'bg-emerald-500' : 'bg-stone-300 dark:bg-stone-600')}>
+            <div className={cn('w-4 h-4 bg-white rounded-full shadow mt-1 transition-transform', isPublic ? 'translate-x-5' : 'translate-x-1')} />
+          </div>
+        </button>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
 
@@ -455,9 +509,11 @@ function BadgesGrid() {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const qc = useQueryClient();
   const { isDark, toggle } = useDarkMode();
   const { colorTheme, changeTheme } = useColorTheme();
   const [sheet, setSheet] = useState<'edit' | 'password' | 'export' | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const { data: user } = useQuery<User>({
     queryKey: ['me'],
@@ -478,6 +534,15 @@ export default function ProfilePage() {
     router.push('/login');
   };
 
+  const shareProfile = () => {
+    if (!user?.username) { setSheet('edit'); return; }
+    const url = `${window.location.origin}/u/${user.username}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const topGrade = (() => {
     if (!stats?.gradeDistribution?.length) return '—';
     const sorted = [...stats.gradeDistribution].sort((a: any, b: any) => b.difficulty - a.difficulty);
@@ -490,11 +555,12 @@ export default function ProfilePage() {
       {/* ── Avatar card ─────────────────────────────────────────────────── */}
       <div className="bg-gradient-to-br from-rock-600 to-rock-800 rounded-3xl p-6 text-white">
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-            <span className="text-xl font-bold text-white">
-              {user?.name ? initials(user.name) : <UserIcon className="w-7 h-7" />}
-            </span>
-          </div>
+          <AvatarUpload
+            name={user?.name || 'Me'}
+            avatarUrl={user?.avatarUrl}
+            size="md"
+            onUploaded={(url) => qc.setQueryData(['me'], (old: User | undefined) => old ? { ...old, avatarUrl: url } : old)}
+          />
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold truncate">{user?.name ?? 'Climber'}</h1>
             {user?.username && (
@@ -509,6 +575,16 @@ export default function ProfilePage() {
               </p>
             )}
           </div>
+          <button
+            onClick={shareProfile}
+            className="shrink-0 p-2 rounded-xl bg-white/15 hover:bg-white/25 transition-colors"
+            title={user?.username ? 'Copy profile link' : 'Set username to share'}
+          >
+            {copied
+              ? <Check className="w-4 h-4 text-white" />
+              : <Share2 className="w-4 h-4 text-white" />
+            }
+          </button>
         </div>
 
         {/* stat pills */}

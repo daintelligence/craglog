@@ -149,10 +149,24 @@ export const projectsApi = {
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 export const usersApi = {
-  updateProfile: (data: { name?: string; bio?: string }) =>
+  updateProfile: (data: { name?: string; bio?: string; avatarUrl?: string; username?: string; isPublic?: boolean }) =>
     api.patch('/users/me', data).then((r) => r.data),
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.post('/users/me/password', data).then((r) => r.data),
+  publicProfile: (username: string) =>
+    api.get(`/users/profile/${username}`).then((r) => r.data),
+};
+
+// ─── Media ────────────────────────────────────────────────────────────────────
+export const mediaApi = {
+  presign: (filename: string, contentType: string): Promise<{ uploadUrl: string; fileUrl: string }> =>
+    api.post('/media/presign', { filename, contentType }).then((r) => r.data),
+};
+
+// ─── Kudos ────────────────────────────────────────────────────────────────────
+export const kudosApi = {
+  toggle: (ascentId: string): Promise<{ kudosCount: number; userHasKudos: boolean }> =>
+    api.post(`/kudos/${ascentId}/toggle`).then((r) => r.data),
 };
 
 // ─── Badges ───────────────────────────────────────────────────────────────────

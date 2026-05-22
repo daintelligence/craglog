@@ -19,6 +19,8 @@ import { ProjectsModule } from './modules/projects/projects.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { InvitesModule } from './modules/invites/invites.module';
 import { AwardsModule } from './modules/awards/awards.module';
+import { MediaModule } from './modules/media/media.module';
+import { KudosModule } from './modules/kudos/kudos.module';
 
 @Module({
   imports: [
@@ -89,6 +91,8 @@ import { AwardsModule } from './modules/awards/awards.module';
     FeedbackModule,
     InvitesModule,
     AwardsModule,
+    MediaModule,
+    KudosModule,
   ],
 })
 export class AppModule {}

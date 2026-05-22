@@ -37,6 +37,9 @@ export class User {
   @Column({ nullable: true })
   avatarUrl: string;
 
+  @Column({ default: true, name: 'is_public' })
+  isPublic: boolean;
+
   @Column({ nullable: true, name: 'refresh_token_hash' })
   refreshTokenHash: string | null;
 

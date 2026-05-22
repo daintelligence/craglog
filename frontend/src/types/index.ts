@@ -7,7 +7,30 @@ export interface User {
   bio?: string;
   avatarUrl?: string;
   isAdmin?: boolean;
+  isPublic?: boolean;
   createdAt: string;
+}
+
+export interface PublicProfile {
+  id: string;
+  name: string;
+  username: string;
+  avatarUrl?: string;
+  bio?: string;
+  createdAt: string;
+  totalAscents: number;
+  uniqueCrags: number;
+  hardestGrade: string | null;
+  recentAscents: {
+    id: string;
+    ascent_type: string;
+    date: string;
+    route_name: string;
+    grade: string | null;
+    grade_system: string | null;
+    crag_name: string | null;
+    kudos_count: number;
+  }[];
 }
 
 export interface AuthResponse {

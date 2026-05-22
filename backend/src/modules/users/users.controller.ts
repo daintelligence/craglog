@@ -1,6 +1,6 @@
 import {
-  Controller, Patch, Post, Body, UseGuards, HttpCode, HttpStatus,
-  BadRequestException, UnauthorizedException,
+  Controller, Patch, Post, Get, Body, Param, UseGuards,
+  HttpCode, HttpStatus, BadRequestException, UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import * as bcrypt from 'bcryptjs';
@@ -10,25 +10,37 @@ import { UsersService } from './users.service';
 
 @ApiTags('users')
 @Controller('users')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  /** Public — no auth required */
+  @Get('profile/:username')
+  @ApiOperation({ summary: 'Get public profile by username' })
+  async publicProfile(@Param('username') username: string) {
+    return this.usersService.getPublicProfile(username);
+  }
+
   @Patch('me')
-  @ApiOperation({ summary: 'Update own profile (name, bio)' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update own profile' })
   async updateProfile(
     @CurrentUser('id') userId: string,
-    @Body() body: { name?: string; bio?: string },
+    @Body() body: { name?: string; bio?: string; avatarUrl?: string; username?: string; isPublic?: boolean },
   ) {
     const updates: Record<string, any> = {};
-    if (body.name !== undefined) updates.name = body.name.trim();
-    if (body.bio  !== undefined) updates.bio  = body.bio.trim();
+    if (body.name      !== undefined) updates.name      = body.name.trim();
+    if (body.bio       !== undefined) updates.bio       = body.bio.trim();
+    if (body.avatarUrl !== undefined) updates.avatarUrl = body.avatarUrl;
+    if (body.username  !== undefined) updates.username  = body.username.trim().toLowerCase();
+    if (body.isPublic  !== undefined) updates.isPublic  = body.isPublic;
     if (!Object.keys(updates).length) return this.usersService.findById(userId);
     return this.usersService.update(userId, updates);
   }
 
   @Post('me/password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Change own password' })
   async changePassword(
